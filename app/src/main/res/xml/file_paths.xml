@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Temporary audio copy directory exposed to external music player preview apps -->
+    <cache-path
+        name="open_external_temp"
+        path="open_external_temp/" />
+
+    <!-- Isolated work copy directory for Scoped Storage atomic writes -->
+    <cache-path
+        name="tag_work"
+        path="tag_work/" />
+</paths>
