@@ -47,6 +47,7 @@ fun LyricsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        shape = MaterialTheme.shapes.extraLargeIncreased,
         modifier = modifier
     ) {
         Column(
@@ -62,7 +63,7 @@ fun LyricsBottomSheet(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Lyrics Editor",
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLargeEmphasized
                     )
                     Text(
                         text = if (trackTitle.isNotBlank()) "$trackTitle — $artistName" else "Unsynchronized Lyrics",

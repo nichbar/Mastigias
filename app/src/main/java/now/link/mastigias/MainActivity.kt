@@ -192,7 +192,7 @@ fun PermissionRationaleScreen(
 
             Text(
                 text = "Storage Permission Required",
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineSmallEmphasized,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )

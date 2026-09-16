@@ -54,15 +54,15 @@ fun BatchEditorContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "Editing $trackCount Tracks",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMediumEmphasized,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
                 Spacer(modifier = Modifier.height(4.dp))

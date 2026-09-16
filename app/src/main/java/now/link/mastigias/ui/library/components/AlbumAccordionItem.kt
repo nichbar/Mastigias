@@ -61,7 +61,7 @@ fun AlbumAccordionItem(
     var isExpanded by remember { mutableStateOf(false) }
     val arrowRotation by animateFloatAsState(
         targetValue = if (isExpanded) 90f else -90f,
-        animationSpec = tween(200),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "accordion_arrow_rotation"
     )
 
@@ -76,12 +76,12 @@ fun AlbumAccordionItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = if (areAllTracksSelected) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                MaterialTheme.colorScheme.primaryContainer
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                MaterialTheme.colorScheme.surfaceContainerLow
             }
         )
     ) {
@@ -101,7 +101,7 @@ fun AlbumAccordionItem(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
@@ -151,12 +151,12 @@ fun AlbumAccordionItem(
             // Expandable Children List
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = expandVertically(animationSpec = tween(200)),
-                exit = shrinkVertically(animationSpec = tween(200))
+                enter = expandVertically(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()),
+                exit = shrinkVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             ) {
                 Column {
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        color = MaterialTheme.colorScheme.outlineVariant
                     )
                     val sortedTracks = remember(album.tracks) {
                         album.tracks.sortedBy { it.trackNumber }
@@ -188,9 +188,9 @@ private fun AlbumChildTrackRow(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+        MaterialTheme.colorScheme.surfaceContainerLowest
     }
 
     Row(
@@ -207,7 +207,7 @@ private fun AlbumChildTrackRow(
         // Track Index Badge
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+            color = MaterialTheme.colorScheme.secondaryContainer,
             modifier = Modifier.size(28.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {

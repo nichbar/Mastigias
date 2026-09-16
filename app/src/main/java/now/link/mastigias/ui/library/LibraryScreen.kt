@@ -26,7 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -152,7 +152,7 @@ fun LibraryScreen(
         ) {
             // Sync progress indicator
             if (uiState.isSyncing) {
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -340,7 +340,7 @@ private fun EmptyLibraryView(
                 } else {
                     "No music tracks found in your library"
                 },
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLargeEmphasized,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )

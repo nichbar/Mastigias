@@ -108,7 +108,7 @@ fun SingleEditorContent(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Advanced Tags",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMediumEmphasized,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )

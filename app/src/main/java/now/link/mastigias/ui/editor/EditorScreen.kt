@@ -17,11 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -187,13 +187,13 @@ fun EditorScreen(
                     text = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             if (isBatch) {
-                                LinearProgressIndicator(
+                                LinearWavyProgressIndicator(
                                     progress = { uiState.saveProgress },
                                     modifier = Modifier.padding(vertical = 16.dp)
                                 )
                                 Text("${(uiState.saveProgress * 100).toInt()}% completed")
                             } else {
-                                CircularProgressIndicator(
+                                CircularWavyProgressIndicator(
                                     modifier = Modifier
                                         .size(48.dp)
                                         .padding(8.dp)

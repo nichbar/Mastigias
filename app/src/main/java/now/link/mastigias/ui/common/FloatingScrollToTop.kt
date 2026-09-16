@@ -28,8 +28,10 @@ fun FloatingScrollToTop(
 
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn() + scaleIn(),
-        exit = fadeOut() + scaleOut(),
+        enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()) +
+            scaleIn(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()),
+        exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
+            scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
         modifier = modifier
     ) {
         FloatingActionButton(
@@ -38,6 +40,7 @@ fun FloatingScrollToTop(
                     lazyListState.animateScrollToItem(0)
                 }
             },
+            shape = MaterialTheme.shapes.largeIncreased,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ) {

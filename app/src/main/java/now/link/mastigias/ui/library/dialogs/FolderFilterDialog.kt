@@ -163,8 +163,8 @@ private fun FolderFilterRow(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -186,7 +186,7 @@ private fun FolderFilterRow(
 
             // Mode badge (Include / Exclude)
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 color = if (filter.isInclude) {
                     MaterialTheme.colorScheme.primaryContainer
                 } else {

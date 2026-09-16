@@ -115,7 +115,7 @@ fun AddFieldDialog(
                                 Spacer(modifier = Modifier.width(8.dp))
 
                                 Surface(
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = MaterialTheme.shapes.small,
                                     color = MaterialTheme.colorScheme.secondaryContainer
                                 ) {
                                     Text(
