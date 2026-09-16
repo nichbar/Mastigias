@@ -3,7 +3,69 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#6750A4"
-        android:pathData="M54,24c-16.57,0 -30,13.43 -30,30s13.43,30 30,30 30,-13.43 30,-30 -13.43,-30 -30,-30zM50,44h8v16h-8z" />
+    <!-- Mastigias Abstract Monochrome Adaptive Icon Foreground (Concept 5: Kinetic Op-Art) -->
+    <!-- Rotated 80 degrees clockwise around center (54, 54) -->
+    
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="80">
+
+        <!-- Outer Bell Arc -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="1.47"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 36.39 49.35 C 36.39 35.90 44.22 29.79 54.00 29.79 C 63.78 29.79 71.61 35.90 71.61 49.35" />
+
+        <!-- Inner Bell Arcs -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeAlpha="0.35"
+            android:strokeWidth="0.73"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 39.33 49.60 C 39.33 38.59 45.93 33.21 54.00 33.21 C 62.07 33.21 68.67 38.59 68.67 49.60" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeAlpha="0.65"
+            android:strokeWidth="0.73"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 42.26 49.84 C 42.26 41.04 47.40 36.64 54.00 36.64 C 60.60 36.64 65.74 41.04 65.74 49.84" />
+
+        <!-- Scalloped Margin Arc -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="0.98"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 36.39 49.35 C 42.26 51.55 65.74 51.55 71.61 49.35" />
+
+        <!-- Oral Arms -->
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="1.22"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 51.80 51.07 C 51.80 61.58 50.82 67.69 51.80 73.81 M 56.20 51.07 C 56.20 61.58 57.18 67.69 56.20 73.81" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="0.98"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 46.91 50.82 C 45.69 59.14 45.93 65.25 47.15 70.14 M 61.09 50.82 C 62.31 59.14 62.07 65.25 60.85 70.14" />
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="0.86"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M 42.26 50.33 C 40.55 56.69 40.79 61.58 42.26 65.86 M 65.74 50.33 C 67.45 56.69 67.21 61.58 65.74 65.86" />
+
+        <!-- Terminal Spindle Clubs & Spots -->
+        <path
+            android:fillColor="#000000"
+            android:pathData="M 51.80 72.34 L 50.33 75.28 L 51.80 78.21 L 53.27 75.28 Z M 56.20 72.34 L 54.73 75.28 L 56.20 78.21 L 57.67 75.28 Z M 47.15 68.92 L 45.93 71.36 L 47.15 73.81 L 48.38 71.36 Z M 60.85 68.92 L 59.62 71.36 L 60.85 73.81 L 62.07 71.36 Z M 42.26 64.64 L 41.28 66.72 L 42.26 68.67 L 43.24 66.72 Z M 65.74 64.64 L 64.76 66.72 L 65.74 68.67 L 66.72 66.72 Z M 54.00 30.89 A 0.61 0.61 0 1 0 54.00 32.11 A 0.61 0.61 0 1 0 54.00 30.89 Z M 50.82 34.07 A 0.86 0.86 0 1 0 50.82 35.78 A 0.86 0.86 0 1 0 50.82 34.07 Z M 57.18 34.07 A 0.86 0.86 0 1 0 57.18 35.78 A 0.86 0.86 0 1 0 57.18 34.07 Z M 47.64 37.86 A 0.98 0.98 0 1 0 47.64 39.82 A 0.98 0.98 0 1 0 47.64 37.86 Z M 54.00 37.62 A 1.22 1.22 0 1 0 54.00 40.06 A 1.22 1.22 0 1 0 54.00 37.62 Z M 60.36 37.86 A 0.98 0.98 0 1 0 60.36 39.82 A 0.98 0.98 0 1 0 60.36 37.86 Z M 44.46 42.38 A 0.86 0.86 0 1 0 44.46 44.10 A 0.86 0.86 0 1 0 44.46 42.38 Z M 50.82 42.14 A 1.10 1.10 0 1 0 50.82 44.34 A 1.10 1.10 0 1 0 50.82 42.14 Z M 57.18 42.14 A 1.10 1.10 0 1 0 57.18 44.34 A 1.10 1.10 0 1 0 57.18 42.14 Z M 63.54 42.38 A 0.86 0.86 0 1 0 63.54 44.10 A 0.86 0.86 0 1 0 63.54 42.38 Z M 41.28 46.66 A 0.73 0.73 0 1 0 41.28 48.13 A 0.73 0.73 0 1 0 41.28 46.66 Z M 47.40 46.72 A 0.92 0.92 0 1 0 47.40 48.56 A 0.92 0.92 0 1 0 47.40 46.72 Z M 54.00 46.79 A 1.10 1.10 0 1 0 54.00 48.99 A 1.10 1.10 0 1 0 54.00 46.79 Z M 60.60 46.72 A 0.92 0.92 0 1 0 60.60 48.56 A 0.92 0.92 0 1 0 60.60 46.72 Z M 66.72 46.66 A 0.73 0.73 0 1 0 66.72 48.13 A 0.73 0.73 0 1 0 66.72 46.66 Z" />
+    </group>
 </vector>

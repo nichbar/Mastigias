@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Mastigias Abstract Monochrome Icon (Concept 5: Kinetic Op-Art) -->
+  <!-- White background, rotated 80 degrees clockwise, 13% content padding -->
+  <rect width="512" height="512" rx="112" fill="#FFFFFF"/>
+  
+  <g transform="rotate(80 256 256)">
+    <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Bell Outer Arcs -->
+      <path d="M 130.72 222.94 C 130.72 127.24 186.40 83.74 256 83.74 C 325.60 83.74 381.28 127.24 381.28 222.94" stroke-width="10.44"/>
+      <path d="M 151.60 224.68 C 151.60 146.38 198.58 108.10 256 108.10 C 313.42 108.10 360.40 146.38 360.40 224.68" stroke-width="5.22" opacity="0.35"/>
+      <path d="M 172.48 226.42 C 172.48 163.78 209.02 132.46 256 132.46 C 302.98 132.46 339.52 163.78 339.52 226.42" stroke-width="5.22" opacity="0.65"/>
+
+      <!-- Scalloped rim bottom -->
+      <path d="M 130.72 222.94 C 172.48 238.60 339.52 238.60 381.28 222.94" stroke-width="6.96"/>
+
+      <!-- Rhythmic vertical flow into oral arms -->
+      <path d="M 240.34 235.12 C 240.34 309.94 233.38 353.44 240.34 396.94" stroke-width="8.70"/>
+      <path d="M 271.66 235.12 C 271.66 309.94 278.62 353.44 271.66 396.94" stroke-width="8.70"/>
+
+      <path d="M 205.54 233.38 C 196.84 292.54 198.58 336.04 207.28 370.84" stroke-width="6.96"/>
+      <path d="M 306.46 233.38 C 315.16 292.54 313.42 336.04 304.72 370.84" stroke-width="6.96"/>
+
+      <path d="M 172.48 229.90 C 160.30 275.14 162.04 309.94 172.48 340.39" stroke-width="6.09"/>
+      <path d="M 339.52 229.90 C 351.70 275.14 349.96 309.94 339.52 340.39" stroke-width="6.09"/>
+    </g>
+
+    <!-- Terminal Clubs as solid geometric diamonds/spindles -->
+    <g fill="#000000">
+      <!-- Center pair -->
+      <polygon points="240.34,386.50 229.90,407.38 240.34,428.26 250.78,407.38"/>
+      <polygon points="271.66,386.50 261.22,407.38 271.66,428.26 282.10,407.38"/>
+
+      <!-- Mid pair -->
+      <polygon points="207.28,362.14 198.58,379.54 207.28,396.94 215.98,379.54"/>
+      <polygon points="304.72,362.14 296.02,379.54 304.72,396.94 313.42,379.54"/>
+
+      <!-- Outer pair -->
+      <polygon points="172.48,331.69 165.52,346.48 172.48,360.40 179.44,346.48"/>
+      <polygon points="339.52,331.69 332.56,346.48 339.52,360.40 346.48,346.48"/>
+
+      <!-- Mastigias Spots (Precision Dot Constellation) -->
+      <circle cx="256.00" cy="95.92" r="4.35"/>
+      <circle cx="233.38" cy="120.28" r="6.09"/>
+      <circle cx="278.62" cy="120.28" r="6.09"/>
+      <circle cx="210.76" cy="148.12" r="6.96"/>
+      <circle cx="256.00" cy="148.12" r="8.70"/>
+      <circle cx="301.24" cy="148.12" r="6.96"/>
+      <circle cx="188.14" cy="179.44" r="6.09"/>
+      <circle cx="233.38" cy="179.44" r="7.83"/>
+      <circle cx="278.62" cy="179.44" r="7.83"/>
+      <circle cx="323.86" cy="179.44" r="6.09"/>
+      <circle cx="165.52" cy="209.02" r="5.22"/>
+      <circle cx="209.02" cy="210.76" r="6.53"/>
+      <circle cx="256.00" cy="212.50" r="7.83"/>
+      <circle cx="302.98" cy="210.76" r="6.53"/>
+      <circle cx="346.48" cy="209.02" r="5.22"/>
+    </g>
+  </g>
+</svg>
