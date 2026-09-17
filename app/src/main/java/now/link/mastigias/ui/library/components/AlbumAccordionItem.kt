@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,12 +71,15 @@ fun AlbumAccordionItem(
         label = "accordion_arrow_rotation"
     )
 
-    val albumCoverTrack = album.coverTrackId?.let { id ->
-        album.tracks.firstOrNull { it.id == id }
-    } ?: album.tracks.firstOrNull()
+    val albumCoverTrack = remember(album) {
+        album.coverTrackId?.let { id ->
+            album.tracks.firstOrNull { it.id == id }
+        } ?: album.tracks.firstOrNull()
+    }
 
-    val areAllTracksSelected = album.tracks.isNotEmpty() &&
-        album.tracks.all { selectedTrackIds.contains(it.id) }
+    val areAllTracksSelected = remember(album.tracks, selectedTrackIds) {
+        album.tracks.isNotEmpty() && album.tracks.all { selectedTrackIds.contains(it.id) }
+    }
 
     Card(
         modifier = modifier
@@ -112,7 +116,7 @@ fun AlbumAccordionItem(
                 ) {
                     if (albumCoverTrack != null) {
                         AsyncImage(
-                            model = albumCoverTrack,
+                            model = if (albumCoverTrack.hasArtwork == false) null else albumCoverTrack,
                             contentDescription = "${album.title} cover",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -131,8 +135,11 @@ fun AlbumAccordionItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                    val subtitle = remember(album.artist, album.tracks.size) {
+                        "${album.artist.ifBlank { "<Unknown Artist>" }} • ${album.tracks.size} tracks"
+                    }
                     Text(
-                        text = "${album.artist.ifBlank { "<Unknown Artist>" }} • ${album.tracks.size} tracks",
+                        text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -182,14 +189,16 @@ fun AlbumAccordionItem(
                         album.tracks.sortedBy { it.trackNumber }
                     }
                     sortedTracks.forEach { track ->
-                        val isTrackSelected = selectedTrackIds.contains(track.id)
-                        AlbumChildTrackRow(
-                            track = track,
-                            isSelected = isTrackSelected,
-                            isMultiSelectMode = isMultiSelectMode,
-                            onClick = { onTrackClick(track) },
-                            onLongClick = { onTrackLongClick(track) }
-                        )
+                        key(track.id) {
+                            val isTrackSelected = selectedTrackIds.contains(track.id)
+                            AlbumChildTrackRow(
+                                track = track,
+                                isSelected = isTrackSelected,
+                                isMultiSelectMode = isMultiSelectMode,
+                                onClick = { onTrackClick(track) },
+                                onLongClick = { onTrackLongClick(track) }
+                            )
+                        }
                     }
                 }
             }
@@ -260,8 +269,11 @@ private fun AlbumChildTrackRow(
             )
         } else {
             // Duration
+            val formattedDuration = remember(track.durationMs) {
+                formatDuration(track.durationMs)
+            }
             Text(
-                text = formatDuration(track.durationMs),
+                text = formattedDuration,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline
             )

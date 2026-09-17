@@ -86,7 +86,11 @@ fun AddFieldDialog(
                     LazyColumn(
                         modifier = Modifier.weight(1f, fill = false)
                     ) {
-                        items(availableFields, key = { it.key }) { field ->
+                        items(
+                            items = availableFields,
+                            key = { it.key },
+                            contentType = { "available_field" }
+                        ) { field ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

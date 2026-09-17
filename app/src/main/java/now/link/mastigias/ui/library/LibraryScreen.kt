@@ -231,7 +231,11 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = uiState.albums,
-                                key = { "${it.title}_${it.artist}" }
+                                key = { album ->
+                                    val id = album.coverTrackId ?: album.tracks.firstOrNull()?.id ?: 0L
+                                    "${album.title}_${album.artist}_$id"
+                                },
+                                contentType = { "album_accordion" }
                             ) { album ->
                                 AlbumAccordionItem(
                                     album = album,
@@ -269,7 +273,8 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = uiState.tracks,
-                                key = { it.id }
+                                key = { it.id },
+                                contentType = { "track_item" }
                             ) { track ->
                                 TrackListItem(
                                     track = track,

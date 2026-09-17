@@ -135,7 +135,11 @@ fun FolderFilterDialog(
                         modifier = Modifier.weight(1f, fill = false),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(filters, key = { it.uri }) { filter ->
+                        items(
+                            items = filters,
+                            key = { it.uri },
+                            contentType = { "folder_filter" }
+                        ) { filter ->
                             FolderFilterRow(
                                 filter = filter,
                                 onToggleMode = { onToggleFilterMode(filter) },

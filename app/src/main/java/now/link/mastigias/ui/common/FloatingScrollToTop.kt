@@ -12,6 +12,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -24,7 +27,9 @@ fun FloatingScrollToTop(
     threshold: Int = 4
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val isVisible = lazyListState.firstVisibleItemIndex > threshold
+    val isVisible by remember(lazyListState, threshold) {
+        derivedStateOf { lazyListState.firstVisibleItemIndex > threshold }
+    }
 
     AnimatedVisibility(
         visible = isVisible,

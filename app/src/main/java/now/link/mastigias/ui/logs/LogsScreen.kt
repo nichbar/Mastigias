@@ -74,10 +74,11 @@ fun LogsScreen(
         onBackClick()
     }
 
-    // Auto-scroll to bottom when new logs arrive
+    // Auto-scroll to bottom when new logs arrive, only if user is already at bottom or on first load
     LaunchedEffect(logEntries.size) {
         if (logEntries.isNotEmpty()) {
-            coroutineScope.launch {
+            val isAtBottom = !listState.canScrollForward || logEntries.size == 1
+            if (isAtBottom) {
                 listState.scrollToItem(logEntries.size - 1)
             }
         }
@@ -179,7 +180,8 @@ fun LogsScreen(
                 ) {
                     items(
                         items = logEntries,
-                        key = { "${it.timestamp}_${it.tag}_${it.message.hashCode()}" }
+                        key = { it.id },
+                        contentType = { "log_entry" }
                     ) { logEntry ->
                         LogEntryItem(logEntry = logEntry)
                     }

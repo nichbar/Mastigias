@@ -57,7 +57,7 @@ fun SingleEditorContent(
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         // Artwork section
-        item(key = "single_artwork_section") {
+        item(key = "single_artwork_section", contentType = "artwork") {
             EditorArtworkSection(
                 artwork = uiState.artwork,
                 isBatchMode = false,
@@ -68,14 +68,15 @@ fun SingleEditorContent(
             )
         }
 
-        item(key = "single_divider_basic") {
+        item(key = "single_divider_basic", contentType = "divider") {
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
 
         // Basic fields
         items(
             items = basicFields,
-            key = { (field, _) -> "single_field_${field.name}" }
+            key = { (field, _) -> "single_field_${field.name}" },
+            contentType = { "tag_field" }
         ) { (field, state) ->
             TagFieldInput(
                 field = field,
@@ -88,7 +89,7 @@ fun SingleEditorContent(
         }
 
         // Lyrics button
-        item(key = "single_lyrics_button") {
+        item(key = "single_lyrics_button", contentType = "lyrics_button") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,7 +116,7 @@ fun SingleEditorContent(
 
         // Non-basic fields (Advanced, Sorting, Musical, URLs, etc.)
         if (nonBasicFields.isNotEmpty()) {
-            item(key = "single_header_advanced") {
+            item(key = "single_header_advanced", contentType = "header") {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Advanced Tags",
@@ -128,7 +129,8 @@ fun SingleEditorContent(
 
             items(
                 items = nonBasicFields,
-                key = { (field, _) -> "single_field_${field.name}" }
+                key = { (field, _) -> "single_field_${field.name}" },
+                contentType = { "tag_field" }
             ) { (field, state) ->
                 TagFieldInput(
                     field = field,
@@ -142,7 +144,7 @@ fun SingleEditorContent(
         }
 
         // "+ Add Tag Field" button
-        item(key = "single_add_field_button") {
+        item(key = "single_add_field_button", contentType = "add_field_button") {
             Spacer(modifier = Modifier.height(12.dp))
             FilledTonalButton(
                 onClick = onAddFieldClick,
@@ -164,7 +166,7 @@ fun SingleEditorContent(
 
         // Technical Audio Info Card
         uiState.initialMetadata?.let { metadata ->
-            item(key = "single_technical_info") {
+            item(key = "single_technical_info", contentType = "technical_info") {
                 Spacer(modifier = Modifier.height(16.dp))
                 TechnicalInfoCard(metadata = metadata)
             }

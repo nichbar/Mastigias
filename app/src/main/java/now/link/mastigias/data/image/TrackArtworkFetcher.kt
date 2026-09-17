@@ -17,13 +17,15 @@ import javax.inject.Inject
 data class TrackArtworkData(
     val id: Long,
     val path: String,
-    val dateModified: Long = 0L
+    val dateModified: Long = 0L,
+    val hasArtwork: Boolean? = null
 )
 
 fun Track.toArtworkData(): TrackArtworkData = TrackArtworkData(
     id = id,
     path = path,
-    dateModified = dateModified
+    dateModified = dateModified,
+    hasArtwork = hasArtwork
 )
 
 class TrackArtworkFetcher(
@@ -37,6 +39,10 @@ class TrackArtworkFetcher(
     }
 
     override suspend fun fetch(): FetchResult? {
+        if (data.hasArtwork == false) {
+            return null
+        }
+
         val artworkBytes = tagEngine.readArtwork(data.path).getOrNull()
             ?: run {
                 LogManager.v(TAG, "No artwork found for track ${data.id} (${data.path})")

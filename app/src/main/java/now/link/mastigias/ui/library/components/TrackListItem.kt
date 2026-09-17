@@ -81,7 +81,7 @@ fun TrackListItem(
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(
-                model = track,
+                model = if (track.hasArtwork == false) null else track,
                 contentDescription = "${track.title} artwork",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -126,12 +126,10 @@ fun TrackListItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            val subtitle = buildString {
+            val subtitle = remember(track.album, track.artist) {
                 val album = track.album.ifBlank { "<Unknown Album>" }
                 val artist = track.artist.ifBlank { "<Unknown Artist>" }
-                append(album)
-                append(" — ")
-                append(artist)
+                "$album — $artist"
             }
             Text(
                 text = subtitle,
@@ -151,8 +149,11 @@ fun TrackListItem(
             )
         } else {
             // Duration
+            val formattedDuration = remember(track.durationMs) {
+                formatDuration(track.durationMs)
+            }
             Text(
-                text = formatDuration(track.durationMs),
+                text = formattedDuration,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -200,5 +201,6 @@ fun formatDuration(durationMs: Long): String {
     val totalSeconds = durationMs / 1000
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
-    return String.format(Locale.ROOT, "%d:%02d", minutes, seconds)
+    val secPrefix = if (seconds < 10) "0" else ""
+    return "$minutes:$secPrefix$seconds"
 }

@@ -51,7 +51,7 @@ fun BatchEditorContent(
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         // Informational banner
-        item(key = "batch_banner") {
+        item(key = "batch_banner", contentType = "banner") {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -78,7 +78,7 @@ fun BatchEditorContent(
         }
 
         // Dedicated Artwork Batch section
-        item(key = "batch_artwork") {
+        item(key = "batch_artwork", contentType = "artwork") {
             EditorArtworkSection(
                 artwork = uiState.artwork,
                 isBatchMode = true,
@@ -89,14 +89,15 @@ fun BatchEditorContent(
             )
         }
 
-        item(key = "batch_divider") {
+        item(key = "batch_divider", contentType = "divider") {
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         }
 
         // Batch Fields (excluding LYRICS per spec)
         items(
             items = validFields,
-            key = { (field, _) -> "batch_field_${field.name}" }
+            key = { (field, _) -> "batch_field_${field.name}" },
+            contentType = { "tag_field" }
         ) { (field, state) ->
             TagFieldInput(
                 field = field,
@@ -109,7 +110,7 @@ fun BatchEditorContent(
         }
 
         // "+ Add Tag Field" button
-        item(key = "batch_add_field_button") {
+        item(key = "batch_add_field_button", contentType = "add_field_button") {
             Spacer(modifier = Modifier.height(16.dp))
             FilledTonalButton(
                 onClick = onAddFieldClick,
