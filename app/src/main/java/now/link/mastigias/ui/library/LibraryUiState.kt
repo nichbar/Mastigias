@@ -15,4 +15,7 @@ data class LibraryUiState(
 ) {
     val isAccordionView: Boolean
         get() = sortOrder == LibrarySortOrder.ALBUM && searchQuery.isBlank() && !isUntaggedFilterActive
+
+    val isEmpty: Boolean
+        get() = if (isAccordionView) albums.isEmpty() else tracks.isEmpty()
 }

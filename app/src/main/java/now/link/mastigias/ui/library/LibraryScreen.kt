@@ -1,5 +1,6 @@
 package now.link.mastigias.ui.library
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -138,8 +141,8 @@ fun LibraryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Sync progress indicator
-            if (uiState.isSyncing) {
+            // Sync progress indicator (shown at top when library already has items)
+            if (uiState.isSyncing && !uiState.isEmpty) {
                 LinearWavyProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -303,44 +306,87 @@ private fun EmptyLibraryView(
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = when {
-                    searchQuery.isNotBlank() -> Icons.Default.Info
-                    isUntaggedFilterActive -> Icons.Default.CheckCircle
-                    else -> Icons.Default.PlayArrow
-                },
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(64.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = when {
-                    searchQuery.isNotBlank() -> "No music matching \"$searchQuery\""
-                    isUntaggedFilterActive -> "No untagged tracks found"
-                    isSyncing -> "Scanning for audio files..."
-                    else -> "No music tracks found in your library"
-                },
-                style = MaterialTheme.typography.titleLargeEmphasized,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            if (!isSyncing) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = when {
-                        searchQuery.isNotBlank() -> "Try searching with a different title, artist, or album keyword."
-                        isUntaggedFilterActive -> "All tracks in your library have title, artist, and album tags."
-                        else -> "Ensure storage permission is granted and your audio files are indexed."
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center
-                )
+        Crossfade(
+            targetState = isSyncing,
+            label = "EmptyOrLoadingTransition"
+        ) { syncing ->
+            if (syncing) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = "Scanning for audio files...",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Indexing tags and album artwork across your storage.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = when {
+                            searchQuery.isNotBlank() -> Icons.Default.Info
+                            isUntaggedFilterActive -> Icons.Default.CheckCircle
+                            else -> Icons.Default.PlayArrow
+                        },
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = when {
+                            searchQuery.isNotBlank() -> "No music matching \"$searchQuery\""
+                            isUntaggedFilterActive -> "No untagged tracks found"
+                            else -> "No music tracks found in your library"
+                        },
+                        style = MaterialTheme.typography.titleLargeEmphasized,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = when {
+                            searchQuery.isNotBlank() -> "Try searching with a different title, artist, or album keyword."
+                            isUntaggedFilterActive -> "All tracks in your library have title, artist, and album tags."
+                            else -> "Ensure storage permission is granted and your audio files are indexed."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline,
+                        textAlign = TextAlign.Center
+                    )
+                    if (searchQuery.isBlank() && !isUntaggedFilterActive) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onSync
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Scan Media")
+                        }
+                    }
+                }
             }
         }
     }
