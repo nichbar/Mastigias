@@ -1,6 +1,7 @@
 package now.link.mastigias
 
 import android.Manifest
+import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -45,11 +46,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import now.link.mastigias.domain.repository.PreferencesRepository
 import now.link.mastigias.domain.repository.ThemeMode
 import now.link.mastigias.ui.navigation.MastigiasNavHost
@@ -66,14 +70,35 @@ class MainActivity : ComponentActivity() {
     lateinit var preferencesRepository: PreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        var themeMode by mutableStateOf<ThemeMode?>(null)
+
+        lifecycleScope.launch {
+            preferencesRepository.themeModeFlow.collect { mode ->
+                themeMode = mode
+                syncApplicationNightMode(mode)
+            }
+        }
+
+        // Safety fallback: ensure splash screen dismisses even if preferences stream stalls
+        lifecycleScope.launch {
+            delay(1000)
+            if (themeMode == null) {
+                themeMode = ThemeMode.SYSTEM
+            }
+        }
+
+        splashScreen.setKeepOnScreenCondition {
+            themeMode == null
+        }
+
         enableEdgeToEdge()
 
         setContent {
-            val themeMode by preferencesRepository.themeModeFlow.collectAsStateWithLifecycle(
-                initialValue = ThemeMode.SYSTEM
-            )
-            val isDark = when (themeMode) {
+            val currentThemeMode = themeMode ?: return@setContent
+            val isDark = when (currentThemeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.DARK -> true
                 ThemeMode.LIGHT -> false
@@ -90,6 +115,13 @@ class MainActivity : ComponentActivity() {
                         darkScrim,
                     ) { isDark },
                 )
+                window.decorView.setBackgroundColor(
+                    if (isDark) {
+                        android.graphics.Color.argb(0xFF, 0x1C, 0x22, 0x28)
+                    } else {
+                        android.graphics.Color.argb(0xFF, 0xFC, 0xFC, 0xFC)
+                    }
+                )
                 onDispose {}
             }
 
@@ -103,6 +135,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun syncApplicationNightMode(mode: ThemeMode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val uiModeManager = getSystemService(UiModeManager::class.java) ?: return
+            val targetMode = when (mode) {
+                ThemeMode.DARK -> UiModeManager.MODE_NIGHT_YES
+                ThemeMode.LIGHT -> UiModeManager.MODE_NIGHT_NO
+                ThemeMode.SYSTEM -> UiModeManager.MODE_NIGHT_AUTO
+            }
+            uiModeManager.setApplicationNightMode(targetMode)
         }
     }
 

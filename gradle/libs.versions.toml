@@ -12,10 +12,12 @@ navigationCompose = "2.8.8"
 serialization = "1.8.0"
 coroutines = "1.10.1"
 junit = "4.13.2"
+coreSplashscreen = "1.0.1"
 
 [libraries]
 # AndroidX & Compose
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version = "1.16.0" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version = "2.8.7" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.10.1" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

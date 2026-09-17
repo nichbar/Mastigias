@@ -5,7 +5,7 @@
         <item name="postSplashScreenTheme">@style/Theme.Mastigias</item>
     </style>
 
-    <style name="Theme.Mastigias" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Mastigias" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
     </style>
 </resources>
