@@ -108,14 +108,14 @@ fun AlbumAccordionItem(
                 // Album Title & Artist
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = album.title.ifBlank { "<Unknown Album>" },
+                        text = album.title.ifBlank { Track.UNKNOWN_ALBUM },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     val subtitle = remember(album.artist, album.tracks.size) {
-                        "${album.artist.ifBlank { "<Unknown Artist>" }} • ${album.tracks.size} tracks"
+                        "${album.artist.ifBlank { Track.UNKNOWN_ARTIST }} • ${album.tracks.size} tracks"
                     }
                     Text(
                         text = subtitle,

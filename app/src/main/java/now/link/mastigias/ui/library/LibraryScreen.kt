@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -204,6 +205,7 @@ fun LibraryScreen(
                         EmptyLibraryView(
                             isSyncing = uiState.isSyncing,
                             searchQuery = uiState.searchQuery,
+                            isUntaggedFilterActive = uiState.isUntaggedFilterActive,
                             onSync = { viewModel.sync() }
                         )
                     } else {
@@ -236,6 +238,7 @@ fun LibraryScreen(
                         EmptyLibraryView(
                             isSyncing = uiState.isSyncing,
                             searchQuery = uiState.searchQuery,
+                            isUntaggedFilterActive = uiState.isUntaggedFilterActive,
                             onSync = { viewModel.sync() }
                         )
                     } else {
@@ -290,6 +293,7 @@ fun LibraryScreen(
 private fun EmptyLibraryView(
     isSyncing: Boolean,
     searchQuery: String,
+    isUntaggedFilterActive: Boolean,
     onSync: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -304,28 +308,35 @@ private fun EmptyLibraryView(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = if (searchQuery.isNotBlank()) Icons.Default.Info else Icons.Default.PlayArrow,
+                imageVector = when {
+                    searchQuery.isNotBlank() -> Icons.Default.Info
+                    isUntaggedFilterActive -> Icons.Default.CheckCircle
+                    else -> Icons.Default.PlayArrow
+                },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.size(64.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = if (searchQuery.isNotBlank()) {
-                    "No music matching \"$searchQuery\""
-                } else if (isSyncing) {
-                    "Scanning for audio files..."
-                } else {
-                    "No music tracks found in your library"
+                text = when {
+                    searchQuery.isNotBlank() -> "No music matching \"$searchQuery\""
+                    isUntaggedFilterActive -> "No untagged tracks found"
+                    isSyncing -> "Scanning for audio files..."
+                    else -> "No music tracks found in your library"
                 },
                 style = MaterialTheme.typography.titleLargeEmphasized,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
-            if (searchQuery.isBlank() && !isSyncing) {
+            if (!isSyncing) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Ensure storage permission is granted and your audio files are indexed.",
+                    text = when {
+                        searchQuery.isNotBlank() -> "Try searching with a different title, artist, or album keyword."
+                        isUntaggedFilterActive -> "All tracks in your library have title, artist, and album tags."
+                        else -> "Ensure storage permission is granted and your audio files are indexed."
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline,
                     textAlign = TextAlign.Center

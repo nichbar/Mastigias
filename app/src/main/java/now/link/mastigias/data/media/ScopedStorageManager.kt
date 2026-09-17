@@ -15,6 +15,7 @@ import now.link.mastigias.data.database.dao.TrackDao
 import now.link.mastigias.domain.engine.TagEngine
 import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.domain.model.TagPatch
+import now.link.mastigias.domain.model.Track
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -199,15 +200,25 @@ open class ScopedStorageManager {
 
                 val track = currentTrack ?: trackDao.getTrackById(trackId)
                 if (track != null) {
-                    val updatedTitle = readTitle.ifBlank { track.title }
-                    val updatedArtist = readArtist.ifBlank { track.artist }
-                    val updatedAlbum = readAlbum.ifBlank { track.album }
-                    val isTagged = updatedTitle.isNotBlank() &&
-                        !updatedTitle.equals("<unknown>", ignoreCase = true) &&
-                        updatedArtist.isNotBlank() &&
-                        !updatedArtist.equals("<unknown>", ignoreCase = true) &&
-                        updatedAlbum.isNotBlank() &&
-                        !updatedAlbum.equals("<unknown>", ignoreCase = true)
+                    val updatedTitle = if (readTitle.isNotBlank()) readTitle
+                    else if (patch.deletedFields.contains(TagField.TITLE)) File(sourcePath).nameWithoutExtension
+                    else track.title
+
+                    val updatedArtist = if (readArtist.isNotBlank()) readArtist
+                    else if (patch.deletedFields.contains(TagField.ARTIST)) Track.UNKNOWN_ARTIST
+                    else if (Track.isUnknownOrBlank(track.artist)) Track.UNKNOWN_ARTIST
+                    else track.artist
+
+                    val updatedAlbum = if (readAlbum.isNotBlank()) readAlbum
+                    else if (patch.deletedFields.contains(TagField.ALBUM)) Track.UNKNOWN_ALBUM
+                    else if (Track.isUnknownOrBlank(track.album)) Track.UNKNOWN_ALBUM
+                    else track.album
+
+                    val isTagged = Track.computeIsTagged(
+                        title = if (patch.deletedFields.contains(TagField.TITLE) && readTitle.isBlank()) "" else updatedTitle,
+                        artist = updatedArtist,
+                        album = updatedAlbum
+                    )
 
                     val updatedTrack = track.copy(
                         title = updatedTitle,

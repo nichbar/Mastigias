@@ -18,6 +18,7 @@ import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.model.TagCategory
 import now.link.mastigias.domain.model.TagField
+import now.link.mastigias.domain.model.Track
 import now.link.mastigias.domain.usecase.BatchWriteMetadataUseCase
 import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
@@ -218,7 +219,7 @@ class EditorViewModel @Inject constructor(
             ?: state.initialMetadata?.fields?.get(TagField.ALBUM)?.trim()
             ?: ""
 
-        if (albumTitle.isBlank() || albumTitle.equals("<unknown>", ignoreCase = true) || albumTitle.equals("<unknown album>", ignoreCase = true)) {
+        if (Track.isUnknownOrBlank(albumTitle)) {
             viewModelScope.launch {
                 _events.emit(EditorUiEvent.ShowToast("Cannot find songs for an unknown album"))
             }

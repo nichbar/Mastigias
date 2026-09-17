@@ -43,15 +43,15 @@ class MusicRepositoryImpl @Inject constructor(
             .map { entities ->
                 val domainTracks = entities.map { it.toDomain() }
                 domainTracks
-                    .groupBy { it.album.ifBlank { "<Unknown Album>" } }
+                    .groupBy { it.album.ifBlank { Track.UNKNOWN_ALBUM } }
                     .map { (albumTitle, tracks) ->
                         val primaryArtist = tracks.map { it.artist }
-                            .filter { it.isNotBlank() && !it.equals("<unknown>", ignoreCase = true) }
+                            .filter { !Track.isUnknownOrBlank(it) }
                             .groupingBy { it }
                             .eachCount()
                             .maxByOrNull { it.value }?.key
-                            ?: tracks.firstOrNull()?.artist?.ifBlank { "<Unknown Artist>" }
-                            ?: "<Unknown Artist>"
+                            ?: tracks.firstOrNull()?.artist?.ifBlank { Track.UNKNOWN_ARTIST }
+                            ?: Track.UNKNOWN_ARTIST
 
                         val sortedTracks = tracks.sortedWith(
                             compareBy<Track> { it.trackNumber }.thenBy { it.title.lowercase(Locale.ROOT) }
@@ -107,12 +107,10 @@ class MusicRepositoryImpl @Inject constructor(
 
     override suspend fun getTracksByAlbum(album: String, artist: String?): List<Track> = withContext(dispatchers.io) {
         val sanitizedAlbum = album.trim()
-        if (sanitizedAlbum.isEmpty() || sanitizedAlbum.equals("<unknown album>", ignoreCase = true)) {
+        if (Track.isUnknownOrBlank(sanitizedAlbum)) {
             emptyList()
         } else {
-            val sanitizedArtist = artist?.trim()?.takeIf { 
-                it.isNotEmpty() && !it.equals("<unknown artist>", ignoreCase = true) && !it.equals("<unknown>", ignoreCase = true) 
-            }
+            val sanitizedArtist = artist?.trim()?.takeIf { !Track.isUnknownOrBlank(it) }
             trackDao.getTracksByAlbum(sanitizedAlbum, sanitizedArtist).map { it.toDomain() }
         }
     }
@@ -133,39 +131,58 @@ class MusicRepositoryImpl @Inject constructor(
                 var trackNumber = item.trackNumber
                 var durationMs = item.durationMs
 
+                val parentFolderName = File(item.path).parentFile?.name
+                val isAlbumParentFolder = !parentFolderName.isNullOrBlank() &&
+                    album.equals(parentFolderName, ignoreCase = true)
+
+                val isIncomplete = Track.isUnknownOrBlank(title) ||
+                    Track.isUnknownOrBlank(artist) ||
+                    Track.isUnknownOrBlank(album) ||
+                    isAlbumParentFolder
+
                 // Enrich non-fast-path or incomplete tracks via TagEngine if readable
-                if (!isFastPath || title.isBlank() || artist.isBlank() || album.isBlank()) {
+                if (!isFastPath || isIncomplete) {
                     val file = File(item.path)
                     if (file.exists() && file.canRead()) {
                         val meta = tagEngine.readMetadata(item.path).getOrNull()
                         if (meta != null) {
-                            val metaTitle = meta.fields[TagField.TITLE]
-                            val metaArtist = meta.fields[TagField.ARTIST]
-                            val metaAlbum = meta.fields[TagField.ALBUM]
+                            val metaTitle = meta.fields[TagField.TITLE]?.takeIf { it.isNotBlank() }
+                            val metaArtist = meta.fields[TagField.ARTIST]?.takeIf { it.isNotBlank() }
+                            val metaAlbum = meta.fields[TagField.ALBUM]?.takeIf { it.isNotBlank() }
                             val metaTrackNumber = meta.fields[TagField.TRACK_NUMBER]?.toIntOrNull()
 
-                            if (title.isBlank() && !metaTitle.isNullOrBlank()) title = metaTitle
-                            if (artist.isBlank() && !metaArtist.isNullOrBlank()) artist = metaArtist
-                            if (album.isBlank() && !metaAlbum.isNullOrBlank()) album = metaAlbum
+                            if (metaTitle != null) {
+                                title = metaTitle
+                            } else if (Track.isUnknownOrBlank(title)) {
+                                title = ""
+                            }
+
+                            if (metaArtist != null) {
+                                artist = metaArtist
+                            } else if (Track.isUnknownOrBlank(artist)) {
+                                artist = ""
+                            }
+
+                            if (metaAlbum != null) {
+                                album = metaAlbum
+                            } else if (isAlbumParentFolder || Track.isUnknownOrBlank(album)) {
+                                album = ""
+                            }
+
                             if (trackNumber == 0 && metaTrackNumber != null) trackNumber = metaTrackNumber
                             if (durationMs <= 0L && meta.durationMs > 0L) durationMs = meta.durationMs
                         }
                     }
                 }
 
-                val isTagged = title.isNotBlank() &&
-                    !title.equals("<unknown>", ignoreCase = true) &&
-                    artist.isNotBlank() &&
-                    !artist.equals("<unknown>", ignoreCase = true) &&
-                    album.isNotBlank() &&
-                    !album.equals("<unknown>", ignoreCase = true)
+                val isTagged = Track.computeIsTagged(title, artist, album)
 
                 TrackEntity(
                     id = item.id,
                     path = item.path,
                     title = title.ifBlank { File(item.path).nameWithoutExtension },
-                    artist = artist.ifBlank { "<Unknown Artist>" },
-                    album = album.ifBlank { "<Unknown Album>" },
+                    artist = artist.ifBlank { Track.UNKNOWN_ARTIST },
+                    album = album.ifBlank { Track.UNKNOWN_ALBUM },
                     trackNumber = trackNumber,
                     durationMs = durationMs,
                     hasArtwork = existingArtworkStatuses[item.id],

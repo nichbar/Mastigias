@@ -69,8 +69,8 @@ fun TrackListItem(
             )
 
             val subtitle = remember(track.album, track.artist) {
-                val album = track.album.ifBlank { "<Unknown Album>" }
-                val artist = track.artist.ifBlank { "<Unknown Artist>" }
+                val album = track.album.ifBlank { Track.UNKNOWN_ALBUM }
+                val artist = track.artist.ifBlank { Track.UNKNOWN_ARTIST }
                 "$album — $artist"
             }
             Text(
