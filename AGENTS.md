@@ -5,7 +5,9 @@
 - Compile Kotlin: `./gradlew compileDebugKotlin`
 - Unit Tests: `./gradlew test`
 - Debug APK: `./gradlew assembleDebug`
-- Release APK (ProGuard/R8): `./gradlew assembleRelease`
+- Release APK (Universal ProGuard/R8): `./gradlew assembleRelease`
+- Release APK (arm64-v8a): `./gradlew assembleRelease -PtargetAbi=arm64-v8a`
+- Local Release Script: `./release.sh`
 - Install to Device: `./gradlew installDebug`
 - Launch Main Activity: `adb shell am start -n now.link.mastigias.debug/now.link.mastigias.MainActivity`
 

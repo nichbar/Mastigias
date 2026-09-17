@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode keystore and configure signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          STORE_FILE: ${{ secrets.STORE_FILE }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Error: KEYSTORE_BASE64 secret is not set."
+            echo "Please configure GitHub Secrets: KEYSTORE_BASE64, KEY_ALIAS, KEY_PASSWORD, STORE_PASSWORD, and optionally STORE_FILE."
+            exit 1
+          fi
+
+          KEYSTORE_FILENAME="${STORE_FILE:-upload-keystore.jks}"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILENAME"
+
+          cat <<EOF > key.properties
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=$KEYSTORE_FILENAME
+          EOF
+
+      - name: Run verification tests
+        run: ./gradlew test compileDebugKotlin
+
+      - name: Build Android APK (release, arm64-v8a)
+        run: ./gradlew assembleRelease -PtargetAbi=arm64-v8a
+
+      - name: Rename arm64 APK
+        run: cp app/build/outputs/apk/release/app-release.apk Mastigias.${{ github.ref_name }}.apk
+
+      - name: Build Android APK (release, universal)
+        run: ./gradlew clean assembleRelease
+
+      - name: Rename universal APK
+        run: cp app/build/outputs/apk/release/app-release.apk Mastigias.${{ github.ref_name }}-universal.apk
+
+      - name: Generate commit changelog
+        run: |
+          TAG="${{ github.ref_name }}"
+          PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
+          {
+            echo "## What's Changed"
+            echo
+            if [ -n "$PREV" ]; then
+              echo "Commits since \`${PREV}\`:"
+              echo
+              git log --pretty=format:'- %s (%h)' "${PREV}..${TAG}"
+              echo
+              echo
+              echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV}...${TAG}"
+            else
+              echo "Initial release."
+              echo
+              git log --pretty=format:'- %s (%h)' "${TAG}"
+              echo
+            fi
+            echo
+            echo "## Downloads"
+            echo
+            echo "- \`Mastigias.${TAG}.apk\` — arm64-v8a (smaller, modern phones)"
+            echo "- \`Mastigias.${TAG}-universal.apk\` — universal (arm64-v8a + armeabi-v7a + x86 + x86_64)"
+          } > release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          generate_release_notes: false
+          files: |
+            Mastigias.${{ github.ref_name }}.apk
+            Mastigias.${{ github.ref_name }}-universal.apk

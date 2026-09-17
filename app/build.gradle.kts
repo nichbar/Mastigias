@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -21,8 +29,13 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        val targetAbi = project.findProperty("targetAbi") as String?
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"))
+            if (!targetAbi.isNullOrBlank()) {
+                abiFilters.addAll(targetAbi.split(",").map { it.trim() })
+            } else {
+                abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"))
+            }
         }
 
         externalNativeBuild {
@@ -35,6 +48,21 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String?
+                keyPassword = keystoreProperties["keyPassword"] as String?
+                storePassword = keystoreProperties["storePassword"] as String?
+                val storeFilePath = keystoreProperties["storeFile"] as String?
+                if (!storeFilePath.isNullOrBlank()) {
+                    val potentialRoot = rootProject.file(storeFilePath)
+                    storeFile = if (potentialRoot.exists()) potentialRoot else file(storeFilePath)
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -43,7 +71,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseSigning = signingConfigs.getByName("release")
+            signingConfig = if (keystorePropertiesFile.exists() && releaseSigning.storeFile?.exists() == true) {
+                releaseSigning
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
         debug {
             applicationIdSuffix = ".debug"

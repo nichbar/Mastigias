@@ -10,3 +10,12 @@ build/
 .cxx/
 **/.cxx/
 
+# Keystore and signing credentials
+*.jks
+*.keystore
+key.properties
+
+# Release artifacts
+Mastigias*.apk
+release-notes.md
+
