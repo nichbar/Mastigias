@@ -13,20 +13,26 @@
 
 - Domain layer (`app/src/main/java/now/link/mastigias/domain/`) contains pure Kotlin business logic only:
   - Zero Android framework imports (`android.*`), zero Compose imports, zero Room annotations.
-  - Repositories and engines are declared strictly as interfaces (`TagEngine`, `MusicRepository`, `PreferencesRepository`).
+  - Repositories, engines, and loggers are declared strictly as interfaces (`TagEngine`, `MusicRepository`, `PreferencesRepository`, `AppLogger`).
+- Core layer (`app/src/main/java/now/link/mastigias/core/`) contains shared cross-cutting infrastructure:
+  - In-memory circular log buffer, Android Log bridge, and toggle state live in `core/logging/`.
+  - Coroutine dispatchers (`AppDispatchers`) and bitmap dimension decoding live in `core/common/`.
+  - Audio format definitions and 1:1 MIME mappings live in `core/constants/`.
 - Data layer (`app/src/main/java/now/link/mastigias/data/`) contains all concrete implementations:
   - Room entities, DAOs, and SQLite FTS4 virtual tables live in `data/database/`.
   - Scoped Storage atomic write protocol and MediaStore data sources live in `data/media/`.
   - Native TagLib JNI bridge and engine implementation live in `data/taglib/` and `app/src/main/cpp/`.
   - DataStore preference persistence lives in `data/datastore/`.
   - Coil 3 custom fetchers and keyers live in `data/image/`.
-- Dependency Injection (`app/src/main/java/now/link/mastigias/di/`) binds all singletons and repositories via Hilt modules.
-- Presentation layer (`app/src/main/java/now/link/mastigias/ui/`) contains Jetpack Compose UI, Material 3 theming, ViewModels, and navigation.
+- Dependency Injection (`app/src/main/java/now/link/mastigias/di/`) binds all singletons, repositories, engines, and loggers via Hilt modules.
+- Presentation layer (`app/src/main/java/now/link/mastigias/ui/`) contains Jetpack Compose UI, Material 3 theming, ViewModels, in-app log viewer (`ui/logs/`), and navigation.
 
 ## Coding Conventions
 
 - Strictly preserve Clean Architecture invariants between layers.
-- Enforce Unidirectional Data Flow (UDF): ViewModels expose immutable `StateFlow<UiState>` and one-off event `Channel<UiEvent>`.
+- Enforce Unidirectional Data Flow (UDF): ViewModels expose immutable `StateFlow<UiState>` and one-off events via `SharedFlow<UiEvent>` or `Channel<UiEvent>`.
+- Domain layer emits telemetry and logs strictly through injected `AppLogger` (with `NoOpAppLogger` fallback for unit tests).
+- Application, Data, and UI layers log via `LogManager` (implementing `AppLogger`), honoring the global diagnostics toggle.
 - Never execute disk I/O or blocking operations on `Dispatchers.Main`; inject and use `AppDispatchers.io` or `AppDispatchers.default`.
 - Execute file writes within `withContext(NonCancellable + dispatchers.io)` to prevent audio corruption if coroutines are cancelled.
 - Use primitive flat array transfer DTOs (`NativeTagBundle`) across the JNI boundary to prevent reflection overhead and ProGuard breakage.
@@ -37,6 +43,7 @@
 ### NEVER
 
 - Import `android.*`, `androidx.compose.*`, or `androidx.room.*` into `domain/`.
+- Import `android.util.Log` or `core.logging.LogManager` into `domain/` (inject `AppLogger` instead).
 - Write directly next to audio files in Scoped Storage (always use the staged work-file protocol in `cacheDir/tag_work/`).
 - Modify or batch-overwrite `TagCategory.LYRICS` during multi-file batch operations.
 - Pass heavy data structures or serialized entities across Compose navigation routes (pass primitive `LongArray` IDs only).
