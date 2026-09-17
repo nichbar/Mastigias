@@ -6,6 +6,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,13 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
@@ -44,12 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import now.link.mastigias.R
 import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.ui.common.ConfirmationDialog
 import now.link.mastigias.ui.editor.dialogs.AddFieldDialog
@@ -149,56 +149,37 @@ fun EditorScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.saveMetadata() },
-                        enabled = !uiState.isSaving && uiState.isDirty
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save changes"
-                        )
-                    }
-
-                    if (!isBatch) {
-                        var showMenu by remember { mutableStateOf(false) }
-                        Box {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                enabled = !uiState.isSaving
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More actions"
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.action_edit_album)) },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.onEditAlbumClicked()
-                                    }
-                                )
-                            }
-                        }
-                    }
-                },
                 modifier = Modifier.background(MaterialTheme.colorScheme.surface),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
                     scrolledContainerColor = Color.Transparent
                 )
             )
+        },
+        floatingActionButton = {
+            AnimatedVisibility(
+                visible = uiState.isDirty,
+                enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                    scaleIn(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()),
+                exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
+                    scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
+            ) {
+                FloatingActionButton(
+                    onClick = {
+                        if (!uiState.isSaving) {
+                            viewModel.saveMetadata()
+                        }
+                    },
+                    shape = MaterialTheme.shapes.largeIncreased,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Save changes"
+                    )
+                }
+            }
         }
     ) { innerPadding ->
         Box(
