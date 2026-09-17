@@ -13,7 +13,9 @@ sealed interface EditorMode {
 data class FieldEditState(
     val isEnabledInBatch: Boolean = false,
     val value: String = "",
-    val isDirty: Boolean = false
+    val isDirty: Boolean = false,
+    val isMixed: Boolean = false,
+    val initialValue: String? = null
 )
 
 data class EditorUiState(

@@ -1,17 +1,14 @@
 package now.link.mastigias.ui.editor.components
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,11 +29,10 @@ fun TagFieldInput(
     editState: FieldEditState,
     isBatchMode: Boolean,
     onValueChange: (String) -> Unit,
-    onToggleBatchEnabled: (Boolean) -> Unit,
+    onToggleBatchEnabled: (Boolean) -> Unit = {},
     onDeleteField: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isEnabled = if (isBatchMode) editState.isEnabledInBatch else true
     val isNumberField = field == TagField.TRACK_NUMBER ||
         field == TagField.TRACK_TOTAL ||
         field == TagField.DISC_NUMBER ||
@@ -44,31 +40,38 @@ fun TagFieldInput(
         field == TagField.YEAR ||
         field == TagField.BPM
 
+    val placeholderText = if (isBatchMode && editState.isMixed) {
+        "<multiple values>"
+    } else {
+        "Enter ${field.displayName.lowercase()}"
+    }
+
+    val supportingMessage: String? = when {
+        editState.isDirty && editState.value.isEmpty() -> if (isBatchMode) "Cleared (will delete tag across tracks)" else "Cleared"
+        editState.isDirty -> "Modified"
+        isBatchMode && editState.isMixed -> "Tracks have different values"
+        else -> null
+    }
+
+    val supportingColor = when {
+        editState.isDirty && editState.value.isEmpty() -> MaterialTheme.colorScheme.error
+        editState.isDirty -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outline
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isBatchMode) {
-            Checkbox(
-                checked = editState.isEnabledInBatch,
-                onCheckedChange = onToggleBatchEnabled
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-
         OutlinedTextField(
-            value = if (isBatchMode && !editState.isEnabledInBatch) "" else editState.value,
+            value = editState.value,
             onValueChange = onValueChange,
-            enabled = isEnabled,
+            enabled = true,
             label = { Text(field.displayName) },
-            placeholder = {
-                Text(
-                    text = if (isBatchMode && !editState.isEnabledInBatch) "<unchanged>" else "Enter ${field.displayName.lowercase()}"
-                )
-            },
-            trailingIcon = if (isEnabled && editState.value.isNotEmpty()) {
+            placeholder = { Text(text = placeholderText) },
+            trailingIcon = if (editState.value.isNotEmpty()) {
                 {
                     IconButton(onClick = onDeleteField) {
                         Icon(
@@ -84,15 +87,15 @@ fun TagFieldInput(
             ),
             singleLine = field.category != TagCategory.LYRICS && field != TagField.COMMENT,
             maxLines = if (field == TagField.COMMENT) 3 else 1,
-            supportingText = if (editState.isDirty) {
-                { Text("Modified", color = MaterialTheme.colorScheme.primary) }
-            } else null,
+            supportingText = supportingMessage?.let { msg ->
+                { Text(msg, color = supportingColor) }
+            },
             modifier = Modifier
                 .weight(1f)
                 .then(
                     if (field == TagField.COMMENT) {
                         Modifier.heightIn(min = 100.dp)
-                    } else if (editState.isDirty) {
+                    } else if (supportingMessage != null) {
                         Modifier.height(84.dp)
                     } else {
                         Modifier.height(64.dp)

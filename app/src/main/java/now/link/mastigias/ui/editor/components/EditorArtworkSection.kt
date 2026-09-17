@@ -52,7 +52,7 @@ fun EditorArtworkSection(
     isArtworkBatchEnabled: Boolean,
     onArtworkSelected: (ByteArray, String, Int, Int) -> Unit,
     onArtworkRemoved: () -> Unit,
-    onToggleBatchEnabled: (Boolean) -> Unit,
+    onToggleBatchEnabled: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -186,14 +186,13 @@ fun EditorArtworkSection(
             }
         }
 
-        // Batch toggle checkbox
-        if (isBatchMode) {
+        // Batch status badge
+        if (isBatchMode && isArtworkBatchEnabled) {
             Spacer(modifier = Modifier.height(8.dp))
-            CheckboxRow(
-                title = "Apply artwork to all selected tracks",
-                subtitle = if (artwork != null) "Overwrites cover art across batch" else "Deletes cover art across batch",
-                checked = isArtworkBatchEnabled,
-                onCheckedChange = onToggleBatchEnabled
+            Text(
+                text = if (artwork != null) "Artwork modified (will update all tracks)" else "Artwork removed (will delete from all tracks)",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (artwork != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
         }
     }

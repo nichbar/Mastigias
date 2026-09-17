@@ -34,14 +34,16 @@ fun AddFieldDialog(
     existingFields: Set<TagField>,
     onFieldSelected: (TagField) -> Unit,
     onDismiss: () -> Unit,
+    isBatchMode: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    val availableFields = remember(existingFields, searchQuery) {
+    val availableFields = remember(existingFields, searchQuery, isBatchMode) {
         val query = searchQuery.trim().lowercase()
         TagField.entries
             .filter { !existingFields.contains(it) }
+            .filter { !isBatchMode || it.isBatchEditable }
             .filter {
                 query.isBlank() ||
                     it.displayName.lowercase().contains(query) ||

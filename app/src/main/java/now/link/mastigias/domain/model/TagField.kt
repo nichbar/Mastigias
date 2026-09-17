@@ -89,11 +89,32 @@ enum class TagField(
     CUSTOM_4("custom_4", "Custom Field 4", TagCategory.CUSTOM, "TXXX:CUSTOM4", "CUSTOM4", "----:com.apple.iTunes:CUSTOM4", "CUSTOM4"),
     CUSTOM_5("custom_5", "Custom Field 5", TagCategory.CUSTOM, "TXXX:CUSTOM5", "CUSTOM5", "----:com.apple.iTunes:CUSTOM5", "CUSTOM5");
 
+    val isBatchEditable: Boolean
+        get() = when (this) {
+            TITLE,
+            TRACK_NUMBER,
+            LYRICS,
+            TITLE_SORT,
+            BPM,
+            INITIAL_KEY,
+            REPLAYGAIN_TRACK_GAIN,
+            REPLAYGAIN_TRACK_PEAK,
+            ACOUSTID_FINGERPRINT,
+            ACOUSTID_ID,
+            MUSICBRAINZ_TRACK_ID,
+            MUSICBRAINZ_RECORDING_ID,
+            MUSICBRAINZ_WORK_ID,
+            ISRC -> false
+            else -> true
+        }
+
     companion object {
         private val keyLookup = entries.associateBy { it.key }
         fun fromKey(key: String): TagField? = keyLookup[key]
 
         val basicFields: List<TagField> = entries.filter { it.category == TagCategory.BASIC }
         val advancedFields: List<TagField> = entries.filter { it.category != TagCategory.BASIC }
+        val batchBasicFields: List<TagField> = basicFields.filter { it.isBatchEditable }
+        val batchAdvancedFields: List<TagField> = advancedFields.filter { it.isBatchEditable }
     }
 }

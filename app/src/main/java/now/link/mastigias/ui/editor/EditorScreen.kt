@@ -276,6 +276,7 @@ fun EditorScreen(
     if (showAddFieldDialog) {
         AddFieldDialog(
             existingFields = uiState.fields.keys,
+            isBatchMode = isBatch,
             onFieldSelected = { field ->
                 viewModel.addField(field)
             },

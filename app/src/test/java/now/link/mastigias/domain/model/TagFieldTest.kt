@@ -61,4 +61,46 @@ class TagFieldTest {
         val representedCategories = TagField.entries.map { it.category }.toSet()
         assertEquals(TagCategory.entries.toSet(), representedCategories)
     }
+
+    @Test
+    fun `verify batchBasicFields excludes track-specific fields`() {
+        val batchBasic = TagField.batchBasicFields
+        assertEquals(10, batchBasic.size)
+        assertTrue(batchBasic.contains(TagField.ALBUM))
+        assertTrue(batchBasic.contains(TagField.ARTIST))
+        assertTrue(batchBasic.contains(TagField.YEAR))
+        assertTrue(batchBasic.contains(TagField.TRACK_TOTAL))
+        assertTrue(batchBasic.contains(TagField.GENRE))
+        assertTrue(batchBasic.contains(TagField.ALBUM_ARTIST))
+        assertTrue(batchBasic.contains(TagField.COMPOSER))
+        assertTrue(batchBasic.contains(TagField.DISC_NUMBER))
+        assertTrue(batchBasic.contains(TagField.DISC_TOTAL))
+        assertTrue(batchBasic.contains(TagField.COMMENT))
+        // Track-specific fields must NOT be in batchBasicFields
+        assertTrue(!batchBasic.contains(TagField.TITLE))
+        assertTrue(!batchBasic.contains(TagField.TRACK_NUMBER))
+    }
+
+    @Test
+    fun `verify track specific fields are not batch editable`() {
+        val excludedFields = listOf(
+            TagField.TITLE,
+            TagField.TRACK_NUMBER,
+            TagField.LYRICS,
+            TagField.TITLE_SORT,
+            TagField.BPM,
+            TagField.INITIAL_KEY,
+            TagField.REPLAYGAIN_TRACK_GAIN,
+            TagField.REPLAYGAIN_TRACK_PEAK,
+            TagField.ACOUSTID_FINGERPRINT,
+            TagField.ACOUSTID_ID,
+            TagField.MUSICBRAINZ_TRACK_ID,
+            TagField.MUSICBRAINZ_RECORDING_ID,
+            TagField.MUSICBRAINZ_WORK_ID,
+            TagField.ISRC
+        )
+        for (field in excludedFields) {
+            assertTrue("Field $field should not be batch editable", !field.isBatchEditable)
+        }
+    }
 }

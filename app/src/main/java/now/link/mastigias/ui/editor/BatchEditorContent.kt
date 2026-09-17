@@ -34,16 +34,16 @@ fun BatchEditorContent(
     uiState: EditorUiState,
     trackCount: Int,
     onValueChange: (TagField, String) -> Unit,
-    onToggleBatchEnabled: (TagField, Boolean) -> Unit,
     onDeleteField: (TagField) -> Unit,
     onAddFieldClick: () -> Unit,
     onArtworkSelected: (ByteArray, String, Int, Int) -> Unit,
     onArtworkRemoved: () -> Unit,
-    onToggleArtworkBatch: (Boolean) -> Unit,
+    onToggleBatchEnabled: (TagField, Boolean) -> Unit = { _, _ -> },
+    onToggleArtworkBatch: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val validFields = remember(uiState.fields) {
-        uiState.fields.filter { it.key.category != TagCategory.LYRICS }.toList()
+        uiState.fields.filter { it.key.isBatchEditable }.toList()
     }
 
     LazyColumn(
@@ -69,7 +69,7 @@ fun BatchEditorContent(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Check the box next to any tag you wish to overwrite across all selected tracks. Unchecked tags will remain unchanged in individual files. (Lyrics are skipped in batch mode for safety).",
+                        text = "Fields display shared values across all tracks. Fields with differing values show <multiple values>. Only modified fields will be applied to all tracks on save.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )

@@ -21,6 +21,7 @@ import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.domain.model.Track
 import now.link.mastigias.domain.usecase.BatchWriteMetadataUseCase
 import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
+import now.link.mastigias.domain.usecase.ReadBatchMetadataUseCase
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
 import now.link.mastigias.domain.usecase.WriteTrackMetadataUseCase
 import now.link.mastigias.ui.navigation.ScreenRoute
@@ -30,6 +31,7 @@ import javax.inject.Inject
 class EditorViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val readTrackMetadataUseCase: ReadTrackMetadataUseCase,
+    private val readBatchMetadataUseCase: ReadBatchMetadataUseCase,
     private val writeTrackMetadataUseCase: WriteTrackMetadataUseCase,
     private val batchWriteMetadataUseCase: BatchWriteMetadataUseCase,
     private val getTracksByAlbumUseCase: GetTracksByAlbumUseCase,
@@ -77,13 +79,14 @@ class EditorViewModel @Inject constructor(
             loadSingleTrackMetadata(trackId)
         } else {
             val idsList = trackIds.toList()
-            val initialFields = TagField.basicFields
-                .filter { it.category != TagCategory.LYRICS }
+            val initialFields = TagField.batchBasicFields
                 .associateWith {
                     FieldEditState(
                         isEnabledInBatch = false,
                         value = "",
-                        isDirty = false
+                        isDirty = false,
+                        isMixed = false,
+                        initialValue = ""
                     )
                 }
 
@@ -91,6 +94,7 @@ class EditorViewModel @Inject constructor(
                 mode = EditorMode.Batch(idsList),
                 fields = initialFields
             )
+            loadBatchMetadata(idsList)
         }
     }
 
@@ -105,9 +109,12 @@ class EditorViewModel @Inject constructor(
 
                 // Add all basic fields
                 TagField.basicFields.forEach { field ->
+                    val value = metadata.fields[field] ?: ""
                     fieldMap[field] = FieldEditState(
-                        value = metadata.fields[field] ?: "",
-                        isDirty = false
+                        value = value,
+                        isDirty = false,
+                        isMixed = false,
+                        initialValue = value
                     )
                 }
 
@@ -116,7 +123,9 @@ class EditorViewModel @Inject constructor(
                     if (!fieldMap.containsKey(field) && value.isNotBlank()) {
                         fieldMap[field] = FieldEditState(
                             value = value,
-                            isDirty = false
+                            isDirty = false,
+                            isMixed = false,
+                            initialValue = value
                         )
                     }
                 }
@@ -138,19 +147,100 @@ class EditorViewModel @Inject constructor(
         }
     }
 
+    private fun loadBatchMetadata(trackIds: List<Long>) {
+        viewModelScope.launch(dispatchers.io) {
+            LogManager.d(TAG, "Loading metadata for batch of ${trackIds.size} tracks")
+            val result = readBatchMetadataUseCase(trackIds)
+            if (result.isSuccess) {
+                val batchMetadata = result.getOrThrow()
+                LogManager.d(TAG, "Loaded batch metadata: ${batchMetadata.fields.size} fields, artwork=${batchMetadata.artwork != null}")
+                val fieldMap = mutableMapOf<TagField, FieldEditState>()
+
+                // Add all batch basic fields
+                TagField.batchBasicFields.forEach { field ->
+                    val info = batchMetadata.fields[field]
+                    val isMixed = info?.isMixed ?: false
+                    val value = info?.value ?: ""
+                    fieldMap[field] = FieldEditState(
+                        isEnabledInBatch = false,
+                        value = value,
+                        isDirty = false,
+                        isMixed = isMixed,
+                        initialValue = if (isMixed) null else value
+                    )
+                }
+
+                // Add any additional batch-editable non-basic fields that have values in metadata
+                batchMetadata.fields.forEach { (field, info) ->
+                    if (!fieldMap.containsKey(field) && field.isBatchEditable && (info.isMixed || info.value.isNotBlank())) {
+                        fieldMap[field] = FieldEditState(
+                            isEnabledInBatch = false,
+                            value = info.value,
+                            isDirty = false,
+                            isMixed = info.isMixed,
+                            initialValue = if (info.isMixed) null else info.value
+                        )
+                    }
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    fields = fieldMap,
+                    artwork = batchMetadata.artwork,
+                    isArtworkDirty = false,
+                    removeArtwork = false,
+                    isArtworkBatchEnabled = false
+                )
+            } else {
+                val errorMsg = result.exceptionOrNull()?.message ?: "Failed to read batch metadata"
+                LogManager.e(TAG, "Failed to load metadata for batch: $errorMsg")
+                _uiState.value = _uiState.value.copy(
+                    error = errorMsg
+                )
+            }
+        }
+    }
+
     fun updateField(field: TagField, value: String) {
         val currentFields = _uiState.value.fields.toMutableMap()
         val currentEdit = currentFields[field] ?: FieldEditState()
-        val initialValue = _uiState.value.initialMetadata?.fields?.get(field) ?: ""
-        val isDirty = if (_uiState.value.mode is EditorMode.Single) {
-            value != initialValue
+
+        val isDirty: Boolean
+        val isMixed: Boolean
+        val isEnabledInBatch: Boolean
+
+        if (_uiState.value.mode is EditorMode.Single) {
+            val initialValue = _uiState.value.initialMetadata?.fields?.get(field) ?: ""
+            isDirty = value != initialValue
+            isMixed = false
+            isEnabledInBatch = false
         } else {
-            value.isNotEmpty()
+            // Batch Mode (Approach B: Auto-detected dirty state)
+            if (currentEdit.initialValue == null) {
+                // Field was initially mixed across tracks
+                if (value.isEmpty()) {
+                    // Revert to keeping multiple values
+                    isDirty = false
+                    isMixed = true
+                    isEnabledInBatch = false
+                } else {
+                    // Overwrite multiple values with new user input
+                    isDirty = true
+                    isMixed = false
+                    isEnabledInBatch = true
+                }
+            } else {
+                // Field was initially uniform across all tracks
+                isDirty = value != currentEdit.initialValue
+                isMixed = false
+                isEnabledInBatch = isDirty
+            }
         }
 
         currentFields[field] = currentEdit.copy(
             value = value,
-            isDirty = isDirty
+            isDirty = isDirty,
+            isMixed = isMixed,
+            isEnabledInBatch = isEnabledInBatch
         )
         _uiState.value = _uiState.value.copy(fields = currentFields)
     }
@@ -167,16 +257,39 @@ class EditorViewModel @Inject constructor(
 
     fun removeField(field: TagField) {
         val currentFields = _uiState.value.fields.toMutableMap()
-        if (TagField.basicFields.contains(field)) {
-            // Reset basic field value to blank
+        val isBatch = _uiState.value.mode is EditorMode.Batch
+        val basicList = if (isBatch) TagField.batchBasicFields else TagField.basicFields
+
+        if (basicList.contains(field)) {
             val currentEdit = currentFields[field] ?: FieldEditState()
+            val isDirty = if (isBatch) {
+                true
+            } else {
+                val initialValue = _uiState.value.initialMetadata?.fields?.get(field) ?: ""
+                initialValue.isNotEmpty()
+            }
             currentFields[field] = currentEdit.copy(
                 value = "",
-                isDirty = true
+                isDirty = isDirty,
+                isMixed = false,
+                isEnabledInBatch = isBatch && isDirty
             )
         } else {
-            // Remove custom/advanced field
-            currentFields.remove(field)
+            if (isBatch) {
+                val currentEdit = currentFields[field]
+                if (currentEdit != null && (currentEdit.initialValue?.isNotEmpty() == true || currentEdit.isMixed)) {
+                    currentFields[field] = currentEdit.copy(
+                        value = "",
+                        isDirty = true,
+                        isMixed = false,
+                        isEnabledInBatch = true
+                    )
+                } else {
+                    currentFields.remove(field)
+                }
+            } else {
+                currentFields.remove(field)
+            }
         }
         _uiState.value = _uiState.value.copy(fields = currentFields)
     }
@@ -188,7 +301,9 @@ class EditorViewModel @Inject constructor(
             currentFields[field] = FieldEditState(
                 isEnabledInBatch = isBatch,
                 value = "",
-                isDirty = isBatch
+                isDirty = isBatch,
+                isMixed = false,
+                initialValue = if (isBatch) null else ""
             )
             _uiState.value = _uiState.value.copy(fields = currentFields)
         }
@@ -199,7 +314,8 @@ class EditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             artwork = artworkData,
             isArtworkDirty = true,
-            removeArtwork = false
+            removeArtwork = false,
+            isArtworkBatchEnabled = true
         )
     }
 
@@ -207,7 +323,8 @@ class EditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             artwork = null,
             removeArtwork = true,
-            isArtworkDirty = true
+            isArtworkDirty = true,
+            isArtworkBatchEnabled = true
         )
     }
 

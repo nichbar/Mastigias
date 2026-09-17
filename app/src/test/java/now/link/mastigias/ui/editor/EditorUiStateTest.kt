@@ -56,6 +56,33 @@ class EditorUiStateTest {
     }
 
     @Test
+    fun `isDirty is false in batch mode with clean mixed fields`() {
+        val state = EditorUiState(
+            mode = EditorMode.Batch(listOf(1L, 2L)),
+            fields = mapOf(
+                TagField.ALBUM to FieldEditState(value = "Shared Album", isDirty = false, isMixed = false, initialValue = "Shared Album"),
+                TagField.ARTIST to FieldEditState(value = "", isDirty = false, isMixed = true, initialValue = null)
+            ),
+            isArtworkDirty = false,
+            removeArtwork = false
+        )
+        assertFalse(state.isDirty)
+    }
+
+    @Test
+    fun `isDirty is true in batch mode when mixed field is modified`() {
+        val state = EditorUiState(
+            mode = EditorMode.Batch(listOf(1L, 2L)),
+            fields = mapOf(
+                TagField.ARTIST to FieldEditState(value = "New Artist", isDirty = true, isMixed = false, isEnabledInBatch = true)
+            ),
+            isArtworkDirty = false,
+            removeArtwork = false
+        )
+        assertTrue(state.isDirty)
+    }
+
+    @Test
     fun `NavigateToBatchEditor equality and hashCode work with contentEquals`() {
         val event1 = EditorUiEvent.NavigateToBatchEditor(longArrayOf(1L, 2L, 3L))
         val event2 = EditorUiEvent.NavigateToBatchEditor(longArrayOf(1L, 2L, 3L))
