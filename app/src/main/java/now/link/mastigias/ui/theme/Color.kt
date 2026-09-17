@@ -4,54 +4,59 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// Teal / Deep Sea primary palette
-val PrimaryLight = Color(0xFF006874)
+// Neutral slate palette (matching markread)
+val PrimaryLight = Color(0xFF5F6368)
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFF97F0FF)
-val OnPrimaryContainerLight = Color(0xFF001F24)
+val PrimaryContainerLight = Color(0xFFE3E4E6)
+val OnPrimaryContainerLight = Color(0xFF1C1D1F)
 
-val SecondaryLight = Color(0xFF4A6267)
+val SecondaryLight = Color(0xFF5F6368)
 val OnSecondaryLight = Color(0xFFFFFFFF)
-val SecondaryContainerLight = Color(0xFFCDE7EC)
-val OnSecondaryContainerLight = Color(0xFF051F23)
+val SecondaryContainerLight = Color(0xFFE4E5E7)
+val OnSecondaryContainerLight = Color(0xFF1D1E20)
 
-val TertiaryLight = Color(0xFF515B92)
+val TertiaryLight = Color(0xFF6B6B74)
 val OnTertiaryLight = Color(0xFFFFFFFF)
-val TertiaryContainerLight = Color(0xFFDEE0FF)
-val OnTertiaryContainerLight = Color(0xFF0C174B)
+val TertiaryContainerLight = Color(0xFFE8E8F0)
+val OnTertiaryContainerLight = Color(0xFF25252E)
 
-val BackgroundLight = Color(0xFFFBFCFD)
-val OnBackgroundLight = Color(0xFF191C1D)
-val SurfaceLight = Color(0xFFFBFCFD)
-val OnSurfaceLight = Color(0xFF191C1D)
-val SurfaceVariantLight = Color(0xFFDBE4E6)
-val OnSurfaceVariantLight = Color(0xFF3F484A)
-val OutlineLight = Color(0xFF6F797B)
-val OutlineVariantLight = Color(0xFFBFC8CA)
+val BackgroundLight = Color(0xFFFCFCFC)
+val OnBackgroundLight = Color(0xFF1A1A1A)
+val SurfaceLight = Color(0xFFFCFCFC)
+val OnSurfaceLight = Color(0xFF1A1A1A)
+val SurfaceVariantLight = Color(0xFFE1E2E4)
+val OnSurfaceVariantLight = Color(0xFF44474A)
+val OutlineLight = Color(0xFF757780)
+val OutlineVariantLight = Color(0xFFC5C6CA)
 val ScrimLight = Color(0xFF000000)
 
-val SurfaceDimLight = Color(0xFFD2DADB)
-val SurfaceBrightLight = Color(0xFFFBFCFD)
+val InverseSurfaceLight = Color(0xFF2F2F2F)
+val InverseOnSurfaceLight = Color(0xFFF2F2F2)
+val InversePrimaryLight = Color(0xFFB8BCC2)
+val SurfaceTintLight = Color(0xFF5F6368)
+
+val SurfaceDimLight = Color(0xFFD8D9DB)
+val SurfaceBrightLight = Color(0xFFFCFCFC)
 val SurfaceContainerLowestLight = Color(0xFFFFFFFF)
-val SurfaceContainerLowLight = Color(0xFFF0F4F5)
-val SurfaceContainerLight = Color(0xFFEAEEEF)
-val SurfaceContainerHighLight = Color(0xFFE4E9EA)
-val SurfaceContainerHighestLight = Color(0xFFDFE3E4)
+val SurfaceContainerLowLight = Color(0xFFF6F6F8)
+val SurfaceContainerLight = Color(0xFFF0F1F3)
+val SurfaceContainerHighLight = Color(0xFFEAEBEE)
+val SurfaceContainerHighestLight = Color(0xFFE1E2E4)
 
-val PrimaryFixedLight = Color(0xFF97F0FF)
-val OnPrimaryFixedLight = Color(0xFF001F24)
-val PrimaryFixedDimLight = Color(0xFF4DD0E1)
-val OnPrimaryFixedVariantLight = Color(0xFF004F58)
+val PrimaryFixedLight = Color(0xFFE3E4E6)
+val OnPrimaryFixedLight = Color(0xFF1C1D1F)
+val PrimaryFixedDimLight = Color(0xFFB8BCC2)
+val OnPrimaryFixedVariantLight = Color(0xFF5F6368)
 
-val SecondaryFixedLight = Color(0xFFCDE7EC)
-val OnSecondaryFixedLight = Color(0xFF051F23)
-val SecondaryFixedDimLight = Color(0xFFB1CBD0)
-val OnSecondaryFixedVariantLight = Color(0xFF334B4F)
+val SecondaryFixedLight = Color(0xFFE4E5E7)
+val OnSecondaryFixedLight = Color(0xFF1D1E20)
+val SecondaryFixedDimLight = Color(0xFFBCC0C4)
+val OnSecondaryFixedVariantLight = Color(0xFF5F6368)
 
-val TertiaryFixedLight = Color(0xFFDEE0FF)
-val OnTertiaryFixedLight = Color(0xFF0C174B)
-val TertiaryFixedDimLight = Color(0xFFBAC3FF)
-val OnTertiaryFixedVariantLight = Color(0xFF384378)
+val TertiaryFixedLight = Color(0xFFE8E8F0)
+val OnTertiaryFixedLight = Color(0xFF25252E)
+val TertiaryFixedDimLight = Color(0xFFCACBD3)
+val OnTertiaryFixedVariantLight = Color(0xFF6B6B74)
 
 val ErrorLight = Color(0xFFBA1A1A)
 val OnErrorLight = Color(0xFFFFFFFF)
@@ -59,53 +64,58 @@ val ErrorContainerLight = Color(0xFFFFDAD6)
 val OnErrorContainerLight = Color(0xFF410002)
 
 // Dark palette
-val PrimaryDark = Color(0xFF4DD0E1)
-val OnPrimaryDark = Color(0xFF00363D)
-val PrimaryContainerDark = Color(0xFF004F58)
-val OnPrimaryContainerDark = Color(0xFF83F3FF)
+val PrimaryDark = Color(0xFFB8BCC2)
+val OnPrimaryDark = Color(0xFF2F3032)
+val PrimaryContainerDark = Color(0xFF46494C)
+val OnPrimaryContainerDark = Color(0xFFE3E4E6)
 
-val SecondaryDark = Color(0xFFB1CBD0)
-val OnSecondaryDark = Color(0xFF1C3438)
-val SecondaryContainerDark = Color(0xFF334B4F)
-val OnSecondaryContainerDark = Color(0xFFCDE7EC)
+val SecondaryDark = Color(0xFFBCC0C4)
+val OnSecondaryDark = Color(0xFF303236)
+val SecondaryContainerDark = Color(0xFF47494D)
+val OnSecondaryContainerDark = Color(0xFFE4E5E7)
 
-val TertiaryDark = Color(0xFFBAC3FF)
-val OnTertiaryDark = Color(0xFF212C60)
-val TertiaryContainerDark = Color(0xFF384378)
-val OnTertiaryContainerDark = Color(0xFFDEE0FF)
+val TertiaryDark = Color(0xFFCACBD3)
+val OnTertiaryDark = Color(0xFF3B3B44)
+val TertiaryContainerDark = Color(0xFF525259)
+val OnTertiaryContainerDark = Color(0xFFE8E8F0)
 
-val BackgroundDark = Color(0xFF191C1D)
-val OnBackgroundDark = Color(0xFFE1E3E3)
-val SurfaceDark = Color(0xFF191C1D)
-val OnSurfaceDark = Color(0xFFE1E3E3)
-val SurfaceVariantDark = Color(0xFF3F484A)
-val OnSurfaceVariantDark = Color(0xFFBFC8CA)
-val OutlineDark = Color(0xFF899294)
-val OutlineVariantDark = Color(0xFF3F484A)
+val BackgroundDark = Color(0xFF1C2228)
+val OnBackgroundDark = Color(0xFFE4E4E4)
+val SurfaceDark = Color(0xFF1C2228)
+val OnSurfaceDark = Color(0xFFE4E4E4)
+val SurfaceVariantDark = Color(0xFF44474A)
+val OnSurfaceVariantDark = Color(0xFFC5C6CA)
+val OutlineDark = Color(0xFF8F9195)
+val OutlineVariantDark = Color(0xFF44474A)
 val ScrimDark = Color(0xFF000000)
 
-val SurfaceDimDark = Color(0xFF101314)
-val SurfaceBrightDark = Color(0xFF373A3B)
-val SurfaceContainerLowestDark = Color(0xFF0C0F10)
-val SurfaceContainerLowDark = Color(0xFF191C1D)
-val SurfaceContainerDark = Color(0xFF1D2021)
-val SurfaceContainerHighDark = Color(0xFF282B2C)
-val SurfaceContainerHighestDark = Color(0xFF333536)
+val InverseSurfaceDark = Color(0xFFE4E4E4)
+val InverseOnSurfaceDark = Color(0xFF1C2228)
+val InversePrimaryDark = Color(0xFF5F6368)
+val SurfaceTintDark = Color(0xFFB8BCC2)
 
-val PrimaryFixedDark = Color(0xFF97F0FF)
-val OnPrimaryFixedDark = Color(0xFF001F24)
-val PrimaryFixedDimDark = Color(0xFF4DD0E1)
-val OnPrimaryFixedVariantDark = Color(0xFF004F58)
+val SurfaceDimDark = Color(0xFF14181D)
+val SurfaceBrightDark = Color(0xFF32383F)
+val SurfaceContainerLowestDark = Color(0xFF0F1216)
+val SurfaceContainerLowDark = Color(0xFF181E23)
+val SurfaceContainerDark = Color(0xFF1C2228)
+val SurfaceContainerHighDark = Color(0xFF262D34)
+val SurfaceContainerHighestDark = Color(0xFF44474A)
 
-val SecondaryFixedDark = Color(0xFFCDE7EC)
-val OnSecondaryFixedDark = Color(0xFF051F23)
-val SecondaryFixedDimDark = Color(0xFFB1CBD0)
-val OnSecondaryFixedVariantDark = Color(0xFF334B4F)
+val PrimaryFixedDark = Color(0xFFE3E4E6)
+val OnPrimaryFixedDark = Color(0xFF1C1D1F)
+val PrimaryFixedDimDark = Color(0xFFB8BCC2)
+val OnPrimaryFixedVariantDark = Color(0xFF5F6368)
 
-val TertiaryFixedDark = Color(0xFFDEE0FF)
-val OnTertiaryFixedDark = Color(0xFF0C174B)
-val TertiaryFixedDimDark = Color(0xFFBAC3FF)
-val OnTertiaryFixedVariantDark = Color(0xFF384378)
+val SecondaryFixedDark = Color(0xFFE4E5E7)
+val OnSecondaryFixedDark = Color(0xFF1D1E20)
+val SecondaryFixedDimDark = Color(0xFFBCC0C4)
+val OnSecondaryFixedVariantDark = Color(0xFF5F6368)
+
+val TertiaryFixedDark = Color(0xFFE8E8F0)
+val OnTertiaryFixedDark = Color(0xFF25252E)
+val TertiaryFixedDimDark = Color(0xFFCACBD3)
+val OnTertiaryFixedVariantDark = Color(0xFF6B6B74)
 
 val ErrorDark = Color(0xFFFFB4AB)
 val OnErrorDark = Color(0xFF690005)
@@ -134,6 +144,10 @@ val LightColorScheme = lightColorScheme(
     outline = OutlineLight,
     outlineVariant = OutlineVariantLight,
     scrim = ScrimLight,
+    inverseSurface = InverseSurfaceLight,
+    inverseOnSurface = InverseOnSurfaceLight,
+    inversePrimary = InversePrimaryLight,
+    surfaceTint = SurfaceTintLight,
     surfaceDim = SurfaceDimLight,
     surfaceBright = SurfaceBrightLight,
     surfaceContainerLowest = SurfaceContainerLowestLight,
@@ -181,6 +195,10 @@ val DarkColorScheme = darkColorScheme(
     outline = OutlineDark,
     outlineVariant = OutlineVariantDark,
     scrim = ScrimDark,
+    inverseSurface = InverseSurfaceDark,
+    inverseOnSurface = InverseOnSurfaceDark,
+    inversePrimary = InversePrimaryDark,
+    surfaceTint = SurfaceTintDark,
     surfaceDim = SurfaceDimDark,
     surfaceBright = SurfaceBrightDark,
     surfaceContainerLowest = SurfaceContainerLowestDark,
