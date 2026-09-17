@@ -1,9 +1,10 @@
 package now.link.mastigias.ui.editor.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -67,8 +68,8 @@ fun TagFieldInput(
                     text = if (isBatchMode && !editState.isEnabledInBatch) "<unchanged>" else "Enter ${field.displayName.lowercase()}"
                 )
             },
-            trailingIcon = {
-                if (isEnabled && editState.value.isNotEmpty()) {
+            trailingIcon = if (isEnabled && editState.value.isNotEmpty()) {
+                {
                     IconButton(onClick = onDeleteField) {
                         Icon(
                             imageVector = Icons.Default.Clear,
@@ -77,7 +78,7 @@ fun TagFieldInput(
                         )
                     }
                 }
-            },
+            } else null,
             keyboardOptions = KeyboardOptions(
                 keyboardType = if (isNumberField) KeyboardType.Number else KeyboardType.Text
             ),
@@ -86,7 +87,17 @@ fun TagFieldInput(
             supportingText = if (editState.isDirty) {
                 { Text("Modified", color = MaterialTheme.colorScheme.primary) }
             } else null,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (field == TagField.COMMENT) {
+                        Modifier.heightIn(min = 100.dp)
+                    } else if (editState.isDirty) {
+                        Modifier.height(84.dp)
+                    } else {
+                        Modifier.height(64.dp)
+                    }
+                )
         )
     }
 }
