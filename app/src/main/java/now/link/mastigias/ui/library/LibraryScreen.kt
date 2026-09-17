@@ -1,5 +1,6 @@
 package now.link.mastigias.ui.library
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,6 +73,10 @@ fun LibraryScreen(
 
     var showSortDialog by remember { mutableStateOf(false) }
     var showFolderDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = uiState.isMultiSelectMode) {
+        viewModel.onClearSelection()
+    }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { msg ->

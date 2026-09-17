@@ -118,7 +118,7 @@ fun EditorScreen(
         }
     }
 
-    BackHandler(onBack = handleBackPress)
+    BackHandler(enabled = uiState.isDirty || uiState.isSaving, onBack = handleBackPress)
 
     val isBatch = uiState.mode is EditorMode.Batch
     val titleText = when (val mode = uiState.mode) {
