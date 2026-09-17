@@ -37,6 +37,11 @@ open class FakeMusicRepository : MusicRepository {
     )
     override suspend fun getTrackById(id: Long): Track? = tracks[id]
     override suspend fun getTracksByIds(ids: List<Long>): List<Track> = ids.mapNotNull { tracks[it] }
+    override suspend fun getTracksByAlbum(album: String, artist: String?): List<Track> =
+        tracks.values.filter {
+            it.album.equals(album, ignoreCase = true) &&
+                (artist == null || it.artist.equals(artist, ignoreCase = true))
+        }.sortedWith(compareBy({ it.trackNumber }, { it.title.lowercase() }))
 
     override suspend fun syncMediaStore(): Result<Unit> {
         syncCalled = true

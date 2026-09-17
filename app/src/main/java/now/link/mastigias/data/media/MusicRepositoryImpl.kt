@@ -100,6 +100,18 @@ class MusicRepositoryImpl @Inject constructor(
         else trackDao.getTracksByIds(ids).map { it.toDomain() }
     }
 
+    override suspend fun getTracksByAlbum(album: String, artist: String?): List<Track> = withContext(dispatchers.io) {
+        val sanitizedAlbum = album.trim()
+        if (sanitizedAlbum.isEmpty() || sanitizedAlbum.equals("<unknown album>", ignoreCase = true)) {
+            emptyList()
+        } else {
+            val sanitizedArtist = artist?.trim()?.takeIf { 
+                it.isNotEmpty() && !it.equals("<unknown artist>", ignoreCase = true) && !it.equals("<unknown>", ignoreCase = true) 
+            }
+            trackDao.getTracksByAlbum(sanitizedAlbum, sanitizedArtist).map { it.toDomain() }
+        }
+    }
+
     override suspend fun syncMediaStore(): Result<Unit> = withContext(dispatchers.io) {
         runCatching {
             val mediaStoreItems = mediaStoreDataSource.queryAudioTracks()

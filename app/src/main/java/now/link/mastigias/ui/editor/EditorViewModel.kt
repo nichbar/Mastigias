@@ -17,6 +17,7 @@ import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.model.TagCategory
 import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.domain.usecase.BatchWriteMetadataUseCase
+import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
 import now.link.mastigias.domain.usecase.WriteTrackMetadataUseCase
 import now.link.mastigias.ui.navigation.ScreenRoute
@@ -28,6 +29,7 @@ class EditorViewModel @Inject constructor(
     private val readTrackMetadataUseCase: ReadTrackMetadataUseCase,
     private val writeTrackMetadataUseCase: WriteTrackMetadataUseCase,
     private val batchWriteMetadataUseCase: BatchWriteMetadataUseCase,
+    private val getTracksByAlbumUseCase: GetTracksByAlbumUseCase,
     private val mediaStoreDataSource: MediaStoreDataSource
 ) : ViewModel() {
 
@@ -188,6 +190,40 @@ class EditorViewModel @Inject constructor(
             removeArtwork = true,
             isArtworkDirty = true
         )
+    }
+
+    fun onEditAlbumClicked() {
+        val state = _uiState.value
+        if (state.mode !is EditorMode.Single) return
+
+        val albumTitle = state.fields[TagField.ALBUM]?.value?.trim()
+            ?: state.initialMetadata?.fields?.get(TagField.ALBUM)?.trim()
+            ?: ""
+
+        if (albumTitle.isBlank() || albumTitle.equals("<unknown>", ignoreCase = true) || albumTitle.equals("<unknown album>", ignoreCase = true)) {
+            viewModelScope.launch {
+                _events.emit(EditorUiEvent.ShowToast("Cannot find songs for an unknown album"))
+            }
+            return
+        }
+
+        val artistName = state.fields[TagField.ARTIST]?.value?.trim()
+            ?: state.initialMetadata?.fields?.get(TagField.ARTIST)?.trim()
+
+        viewModelScope.launch {
+            val tracks = getTracksByAlbumUseCase(albumTitle, artistName)
+            val finalTracks = if (tracks.size <= 1 && artistName != null) {
+                getTracksByAlbumUseCase(albumTitle, null).ifEmpty { tracks }
+            } else {
+                tracks
+            }
+
+            if (finalTracks.size <= 1) {
+                _events.emit(EditorUiEvent.ShowToast("No other tracks found in this album"))
+            } else {
+                _events.emit(EditorUiEvent.NavigateToBatchEditor(finalTracks.map { it.id }.toLongArray()))
+            }
+        }
     }
 
     fun toggleArtworkBatch(isEnabled: Boolean) {

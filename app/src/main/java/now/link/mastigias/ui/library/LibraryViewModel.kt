@@ -22,6 +22,7 @@ import now.link.mastigias.domain.model.Track
 import now.link.mastigias.domain.repository.PreferencesRepository
 import now.link.mastigias.domain.usecase.GetAlbumsUseCase
 import now.link.mastigias.domain.usecase.GetLibraryTracksUseCase
+import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
 import now.link.mastigias.domain.usecase.SyncMediaStoreUseCase
 import javax.inject.Inject
 
@@ -44,6 +45,7 @@ private data class SelectionAndStatus(
 class LibraryViewModel @Inject constructor(
     private val getLibraryTracksUseCase: GetLibraryTracksUseCase,
     private val getAlbumsUseCase: GetAlbumsUseCase,
+    private val getTracksByAlbumUseCase: GetTracksByAlbumUseCase,
     private val syncMediaStoreUseCase: SyncMediaStoreUseCase,
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
@@ -172,6 +174,32 @@ class LibraryViewModel @Inject constructor(
         _selectedTrackIds.value = currentSelected
         if (_selectedTrackIds.value.isEmpty()) {
             _isMultiSelectMode.value = false
+        }
+    }
+
+    fun editAlbum(album: Album, onNavigateToEditor: (LongArray) -> Unit) {
+        val trackIds = album.tracks.map { it.id }.toLongArray()
+        if (trackIds.isNotEmpty()) {
+            onNavigateToEditor(trackIds)
+        }
+    }
+
+    fun editAlbumForTrack(track: Track, onNavigateToEditor: (LongArray) -> Unit) {
+        val albumTitle = track.album.trim()
+        if (albumTitle.isBlank() || albumTitle.equals("<unknown>", ignoreCase = true) || albumTitle.equals("<unknown album>", ignoreCase = true)) {
+            onNavigateToEditor(longArrayOf(track.id))
+            return
+        }
+
+        viewModelScope.launch {
+            val tracks = getTracksByAlbumUseCase(albumTitle, track.artist)
+            val finalTracks = if (tracks.size <= 1 && track.artist.isNotBlank()) {
+                getTracksByAlbumUseCase(albumTitle, null).ifEmpty { tracks }
+            } else {
+                tracks
+            }
+            val ids = if (finalTracks.isNotEmpty()) finalTracks.map { it.id }.toLongArray() else longArrayOf(track.id)
+            onNavigateToEditor(ids)
         }
     }
 

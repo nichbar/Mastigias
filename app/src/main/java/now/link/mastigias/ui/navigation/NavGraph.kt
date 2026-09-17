@@ -54,6 +54,9 @@ fun MastigiasNavHost(
                 viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToBatchEditor = { trackIds ->
+                    navController.navigate(ScreenRoute.Editor(trackIds))
                 }
             )
         }

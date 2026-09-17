@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Mastigias</string>
+    <string name="action_edit_album">Edit Album</string>
+    <string name="edit_album_description">Edit all songs in this album</string>
+    <string name="no_other_album_tracks_found">No other tracks found in this album</string>
 </resources>

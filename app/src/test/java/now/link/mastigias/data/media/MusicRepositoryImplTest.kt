@@ -67,6 +67,12 @@ class FakeTrackDao : TrackDao {
     override suspend fun getTracksByIds(ids: List<Long>): List<TrackEntity> =
         ids.mapNotNull { tracks.value[it] }
 
+    override suspend fun getTracksByAlbum(album: String, artist: String?): List<TrackEntity> =
+        tracks.value.values.filter {
+            it.album.equals(album, ignoreCase = true) &&
+                (artist == null || it.artist.equals(artist, ignoreCase = true))
+        }.sortedWith(compareBy({ it.trackNumber }, { it.title.lowercase() }))
+
     override suspend fun upsertTracks(tracksList: List<TrackEntity>) {
         tracks.update { current ->
             current + tracksList.associateBy { it.id }
@@ -263,5 +269,42 @@ class MusicRepositoryImplTest {
 
         val empty = repository.getTracksByIds(emptyList())
         assertTrue(empty.isEmpty())
+    }
+
+    @Test
+    fun `getTracksByAlbum returns matching tracks`() = runBlocking {
+        val tracks = listOf(
+            TrackEntity(1, "/p1", "Come Together", "The Beatles", "Abbey Road", 1, 259000, true, true, 1000, "audio/flac", 10000),
+            TrackEntity(2, "/p2", "Something", "The Beatles", "Abbey Road", 2, 182000, true, true, 1000, "audio/flac", 10000),
+            TrackEntity(3, "/p3", "Comfortably Numb", "Pink Floyd", "The Wall", 6, 382000, true, true, 2000, "audio/flac", 20000)
+        )
+        fakeTrackDao.setTracks(tracks)
+
+        val albumTracks = repository.getTracksByAlbum("Abbey Road")
+        assertEquals(2, albumTracks.size)
+        assertEquals("Come Together", albumTracks[0].title)
+        assertEquals("Something", albumTracks[1].title)
+
+        val blankTracks = repository.getTracksByAlbum("   ")
+        assertTrue(blankTracks.isEmpty())
+
+        val unknownTracks = repository.getTracksByAlbum("<unknown album>")
+        assertTrue(unknownTracks.isEmpty())
+    }
+
+    @Test
+    fun `getTracksByAlbum with artist filter narrows down results`() = runBlocking {
+        val tracks = listOf(
+            TrackEntity(1, "/p1", "Song A", "Artist One", "Greatest Hits", 1, 180000, true, true, 1000, "audio/flac", 10000),
+            TrackEntity(2, "/p2", "Song B", "Artist Two", "Greatest Hits", 1, 190000, true, true, 2000, "audio/flac", 10000)
+        )
+        fakeTrackDao.setTracks(tracks)
+
+        val filtered = repository.getTracksByAlbum("Greatest Hits", "Artist One")
+        assertEquals(1, filtered.size)
+        assertEquals("Song A", filtered[0].title)
+
+        val allHits = repository.getTracksByAlbum("Greatest Hits", null)
+        assertEquals(2, allHits.size)
     }
 }

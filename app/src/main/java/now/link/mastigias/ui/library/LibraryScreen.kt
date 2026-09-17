@@ -242,6 +242,9 @@ fun LibraryScreen(
                                     },
                                     onHeaderLongClick = {
                                         viewModel.onAlbumHeaderLongClicked(album)
+                                    },
+                                    onEditAlbumClick = { albumToEdit ->
+                                        viewModel.editAlbum(albumToEdit, onNavigateToEditor)
                                     }
                                 )
                             }
@@ -274,6 +277,9 @@ fun LibraryScreen(
                                     },
                                     onLongClick = {
                                         viewModel.onTrackLongClicked(track)
+                                    },
+                                    onEditAlbumClick = { trackToEdit ->
+                                        viewModel.editAlbumForTrack(trackToEdit, onNavigateToEditor)
                                     }
                                 )
                             }

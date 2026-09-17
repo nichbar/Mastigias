@@ -37,4 +37,13 @@ sealed interface EditorUiEvent {
     data class ShowToast(val message: String) : EditorUiEvent
     data object NavigateBack : EditorUiEvent
     data class RequestStorageConsent(val intentSender: IntentSender) : EditorUiEvent
+    data class NavigateToBatchEditor(val trackIds: LongArray) : EditorUiEvent {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is NavigateToBatchEditor) return false
+            return trackIds.contentEquals(other.trackIds)
+        }
+
+        override fun hashCode(): Int = trackIds.contentHashCode()
+    }
 }

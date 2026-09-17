@@ -12,6 +12,7 @@ interface MusicRepository {
     fun observeUntaggedTracks(): Flow<List<Track>>
     suspend fun getTrackById(id: Long): Track?
     suspend fun getTracksByIds(ids: List<Long>): List<Track>
+    suspend fun getTracksByAlbum(album: String, artist: String? = null): List<Track>
     suspend fun syncMediaStore(): Result<Unit>
     suspend fun writeTrackMetadata(trackId: Long, patch: TagPatch): Result<Unit>
     suspend fun deleteTrack(trackId: Long): Result<Unit>

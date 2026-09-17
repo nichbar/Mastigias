@@ -54,4 +54,15 @@ class EditorUiStateTest {
         )
         assertTrue(state.isDirty)
     }
+
+    @Test
+    fun `NavigateToBatchEditor equality and hashCode work with contentEquals`() {
+        val event1 = EditorUiEvent.NavigateToBatchEditor(longArrayOf(1L, 2L, 3L))
+        val event2 = EditorUiEvent.NavigateToBatchEditor(longArrayOf(1L, 2L, 3L))
+        val event3 = EditorUiEvent.NavigateToBatchEditor(longArrayOf(1L, 4L))
+
+        org.junit.Assert.assertEquals(event1, event2)
+        org.junit.Assert.assertEquals(event1.hashCode(), event2.hashCode())
+        org.junit.Assert.assertNotEquals(event1, event3)
+    }
 }

@@ -46,6 +46,14 @@ interface TrackDao {
     @Query("SELECT * FROM tracks WHERE is_tagged = 0 ORDER BY title COLLATE NOCASE ASC")
     fun observeUntaggedTracks(): Flow<List<TrackEntity>>
 
+    @Query("""
+        SELECT * FROM tracks 
+        WHERE album = :album COLLATE NOCASE 
+          AND (:artist IS NULL OR artist = :artist COLLATE NOCASE)
+        ORDER BY track_number ASC, title COLLATE NOCASE ASC
+    """)
+    suspend fun getTracksByAlbum(album: String, artist: String? = null): List<TrackEntity>
+
     @Query("SELECT * FROM tracks WHERE id = :id LIMIT 1")
     suspend fun getTrackById(id: Long): TrackEntity?
 
