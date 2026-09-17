@@ -2,6 +2,7 @@ package now.link.mastigias.ui.editor.dialogs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import now.link.mastigias.domain.model.TagField
+import now.link.mastigias.ui.common.MastigiasSearchBar
 
 @Composable
 fun AddFieldDialog(
@@ -67,15 +68,12 @@ fun AddFieldDialog(
                     .fillMaxWidth()
                     .heightIn(max = 420.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search fields...") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                MastigiasSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    placeholderText = "Search fields...",
+                    contentPadding = PaddingValues(bottom = 8.dp)
                 )
-
-                Spacer(modifier = Modifier.height(10.dp))
 
                 if (availableFields.isEmpty()) {
                     Text(
