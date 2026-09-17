@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import now.link.mastigias.core.constants.AudioFormats
+import now.link.mastigias.core.logging.LogManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,6 +36,10 @@ data class MediaStoreAudioItem(
 @Singleton
 open class MediaStoreDataSource {
     private val context: Context?
+
+    companion object {
+        private const val TAG = "MediaStoreDataSource"
+    }
 
     @Inject
     constructor(@ApplicationContext context: Context) {
@@ -58,8 +63,10 @@ open class MediaStoreDataSource {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // API 31+ Manage Media check: suppress per-save system dialog if granted
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(ctx)) {
+                LogManager.d(TAG, "canManageMedia granted, batch write request dialog bypassed for ${trackIds.size} tracks")
                 return null
             }
+            LogManager.d(TAG, "Creating system batch write consent request for ${trackIds.size} tracks")
             val uris = trackIds.map { getTrackUri(it) }
             val pendingIntent: PendingIntent = MediaStore.createWriteRequest(ctx.contentResolver, uris)
             return pendingIntent.intentSender
@@ -100,6 +107,7 @@ open class MediaStoreDataSource {
                 sortOrder
             )
         } catch (e: Exception) {
+            LogManager.e(TAG, "Failed to query MediaStore: ${e.message}", e)
             null
         }
 
@@ -149,6 +157,7 @@ open class MediaStoreDataSource {
             }
         }
 
+        LogManager.i(TAG, "MediaStore query completed: found ${items.size} supported audio tracks")
         return items
     }
 
@@ -157,8 +166,11 @@ open class MediaStoreDataSource {
         return try {
             val uri = getTrackUri(trackId)
             val rows = ctx.contentResolver.delete(uri, null, null)
-            rows > 0
+            val success = rows > 0
+            LogManager.d(TAG, "Deleted track $trackId from MediaStore: success=$success (rows=$rows)")
+            success
         } catch (e: Exception) {
+            LogManager.e(TAG, "Failed to delete track $trackId from MediaStore: ${e.message}", e)
             false
         }
     }
@@ -171,6 +183,7 @@ open class MediaStoreDataSource {
         }
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean, uri: Uri?) {
+                LogManager.v(TAG, "MediaStore onChange fired: uri=$uri, selfChange=$selfChange")
                 trySend(Unit)
             }
         }

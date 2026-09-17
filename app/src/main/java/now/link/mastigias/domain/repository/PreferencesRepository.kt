@@ -17,9 +17,11 @@ interface PreferencesRepository {
     val sortDirectionFlow: Flow<SortDirection>
     val folderFiltersFlow: Flow<List<FolderFilter>>
     val themeModeFlow: Flow<ThemeMode> get() = flowOf(ThemeMode.SYSTEM)
+    val loggingEnabledFlow: Flow<Boolean> get() = flowOf(true)
 
     suspend fun setSortOrder(order: LibrarySortOrder)
     suspend fun setSortDirection(direction: SortDirection)
     suspend fun setFolderFilters(filters: List<FolderFilter>)
     suspend fun setThemeMode(mode: ThemeMode) {}
+    suspend fun setLoggingEnabled(enabled: Boolean) {}
 }

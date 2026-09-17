@@ -19,7 +19,8 @@ import javax.inject.Inject
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val folderFilters: List<FolderFilter> = emptyList(),
-    val hasManageMediaPermission: Boolean = false
+    val hasManageMediaPermission: Boolean = false,
+    val isLoggingEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -33,12 +34,14 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         preferencesRepository.themeModeFlow,
         preferencesRepository.folderFiltersFlow,
-        _manageMediaGranted
-    ) { theme, filters, hasManageMedia ->
+        _manageMediaGranted,
+        preferencesRepository.loggingEnabledFlow
+    ) { theme, filters, hasManageMedia, loggingEnabled ->
         SettingsUiState(
             themeMode = theme,
             folderFilters = filters,
-            hasManageMediaPermission = hasManageMedia
+            hasManageMediaPermission = hasManageMedia,
+            isLoggingEnabled = loggingEnabled
         )
     }.stateIn(
         scope = viewModelScope,
@@ -51,6 +54,12 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
             preferencesRepository.setThemeMode(mode)
+        }
+    }
+
+    fun setLoggingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setLoggingEnabled(enabled)
         }
     }
 

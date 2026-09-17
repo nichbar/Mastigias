@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.model.TagCategory
@@ -33,6 +34,10 @@ class EditorViewModel @Inject constructor(
     private val mediaStoreDataSource: MediaStoreDataSource
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "EditorViewModel"
+    }
+
     private val _uiState = MutableStateFlow(
         EditorUiState(
             mode = EditorMode.Single(0L)
@@ -53,6 +58,7 @@ class EditorViewModel @Inject constructor(
 
     fun initialize(trackIds: LongArray) {
         if (trackIds.isEmpty()) return
+        LogManager.d(TAG, "Initializing editor with ${trackIds.size} track(s): ${trackIds.joinToString()}")
 
         if (trackIds.size == 1) {
             val trackId = trackIds[0]
@@ -81,9 +87,11 @@ class EditorViewModel @Inject constructor(
 
     private fun loadSingleTrackMetadata(trackId: Long) {
         viewModelScope.launch {
+            LogManager.d(TAG, "Loading metadata for single track $trackId")
             val result = readTrackMetadataUseCase(trackId)
             if (result.isSuccess) {
                 val metadata = result.getOrThrow()
+                LogManager.d(TAG, "Loaded metadata for track $trackId: ${metadata.fields.size} fields, artwork=${metadata.artwork != null}")
                 val fieldMap = mutableMapOf<TagField, FieldEditState>()
 
                 // Add all basic fields
@@ -112,8 +120,10 @@ class EditorViewModel @Inject constructor(
                     removeArtwork = false
                 )
             } else {
+                val errorMsg = result.exceptionOrNull()?.message ?: "Failed to read track metadata"
+                LogManager.e(TAG, "Failed to load metadata for track $trackId: $errorMsg")
                 _uiState.value = _uiState.value.copy(
-                    error = result.exceptionOrNull()?.message ?: "Failed to read track metadata"
+                    error = errorMsg
                 )
             }
         }
@@ -301,10 +311,12 @@ class EditorViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isSaving = false)
 
             if (result.isSuccess) {
+                LogManager.i(TAG, "Single track $trackId tags saved successfully")
                 _events.emit(EditorUiEvent.ShowToast("Tags saved successfully"))
                 _events.emit(EditorUiEvent.NavigateBack)
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "Failed to save track tags"
+                LogManager.e(TAG, "Failed to save tags for track $trackId: $errorMsg")
                 _uiState.value = _uiState.value.copy(error = errorMsg)
                 _events.emit(EditorUiEvent.ShowToast("Save failed: $errorMsg"))
             }
@@ -332,10 +344,11 @@ class EditorViewModel @Inject constructor(
 
                 if (progress.current == progress.total) {
                     _uiState.value = _uiState.value.copy(isSaving = false)
+                    val succeeded = progress.total - progress.failedIds.size
+                    LogManager.i(TAG, "Batch save completed: $succeeded succeeded, ${progress.failedIds.size} failed out of ${progress.total}")
                     if (progress.failedIds.isEmpty()) {
                         _events.emit(EditorUiEvent.ShowToast("All ${progress.total} tracks updated successfully"))
                     } else {
-                        val succeeded = progress.total - progress.failedIds.size
                         _events.emit(EditorUiEvent.ShowToast("$succeeded saved, ${progress.failedIds.size} failed"))
                     }
                     _events.emit(EditorUiEvent.NavigateBack)

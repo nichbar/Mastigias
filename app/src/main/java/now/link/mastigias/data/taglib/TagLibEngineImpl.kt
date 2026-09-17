@@ -3,6 +3,7 @@ package now.link.mastigias.data.taglib
 import kotlinx.coroutines.withContext
 import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.core.common.ImageUtils
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.domain.engine.TagEngine
 import now.link.mastigias.domain.model.AudioMetadata
 import now.link.mastigias.domain.model.TagField
@@ -24,12 +25,18 @@ class TagLibEngineImpl @Inject constructor(
         withContext(dispatchers.io) {
             runCatching {
                 if (!TagLibBridge.isAvailable()) {
+                    LogManager.v(TAG, "TagLib native library unavailable, using JVM fallback for readMetadata: $path")
                     return@runCatching readMetadataFallback(path)
                 }
 
+                val start = System.currentTimeMillis()
                 val bundle = TagLibBridge.nativeReadMetadata(path)
-                    ?: error("TagLib failed to read metadata from $path")
+                if (bundle == null) {
+                    LogManager.e(TAG, "TagLib failed to read metadata from $path")
+                    error("TagLib failed to read metadata from $path")
+                }
 
+                LogManager.v(TAG, "Read metadata from $path in ${System.currentTimeMillis() - start}ms")
                 parseBundleToAudioMetadata(path, bundle)
             }
         }
@@ -38,9 +45,12 @@ class TagLibEngineImpl @Inject constructor(
         withContext(dispatchers.io) {
             runCatching {
                 if (!TagLibBridge.isAvailable()) {
+                    LogManager.v(TAG, "TagLib native library unavailable, using JVM fallback for readArtwork: $path")
                     return@runCatching readArtworkFallback(path)
                 }
-                TagLibBridge.nativeReadArtwork(path)
+                val artwork = TagLibBridge.nativeReadArtwork(path)
+                LogManager.v(TAG, "Read artwork from $path: ${artwork?.size ?: 0} bytes")
+                artwork
             }
         }
 
@@ -48,6 +58,7 @@ class TagLibEngineImpl @Inject constructor(
         withContext(dispatchers.io) {
             runCatching {
                 if (!TagLibBridge.isAvailable()) {
+                    LogManager.w(TAG, "TagLib native library unavailable, using JVM fallback for writeMetadata: $path")
                     writeMetadataFallback(path, patch)
                     return@runCatching
                 }
@@ -64,6 +75,7 @@ class TagLibEngineImpl @Inject constructor(
                     if (h > 0) artHeight = h
                 }
 
+                val start = System.currentTimeMillis()
                 val success = TagLibBridge.nativeWriteMetadata(
                     filePath = path,
                     setKeys = setKeys,
@@ -76,7 +88,11 @@ class TagLibEngineImpl @Inject constructor(
                     artworkHeight = artHeight
                 )
 
-                if (!success) error("TagLib failed to write tags to $path")
+                if (!success) {
+                    LogManager.e(TAG, "TagLib nativeWriteMetadata failed for $path")
+                    error("TagLib failed to write tags to $path")
+                }
+                LogManager.d(TAG, "TagLib nativeWriteMetadata succeeded for $path in ${System.currentTimeMillis() - start}ms")
             }
         }
 
@@ -138,6 +154,8 @@ class TagLibEngineImpl @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "TagLibEngine"
+
         fun mapTagsToFields(keys: Array<String>, values: Array<String>): Map<TagField, String> {
             val fieldMap = mutableMapOf<TagField, String>()
             val count = minOf(keys.size, values.size)

@@ -1,5 +1,6 @@
 package now.link.mastigias.core.logging
 
+import now.link.mastigias.domain.logging.AppLogger
 import now.link.mastigias.domain.model.LogEntry
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -101,5 +102,47 @@ class LogManagerTest {
 
         assertEquals(0, LogManager.getLogCount())
         assertTrue(LogManager.getAllLogEntries().isEmpty())
+    }
+
+    @Test
+    fun `LogManager implements AppLogger contract correctly`() {
+        val logger: AppLogger = LogManager
+        logger.v("AppLoggerTag", "Verbose message via interface")
+        logger.d("AppLoggerTag", "Debug message via interface")
+        logger.i("AppLoggerTag", "Info message via interface")
+        logger.w("AppLoggerTag", "Warn message via interface")
+        logger.e("AppLoggerTag", "Error message via interface")
+
+        val entries = LogManager.getAllLogEntries()
+        assertEquals(5, entries.size)
+        assertEquals("Verbose message via interface", entries[0].message)
+        assertEquals("Debug message via interface", entries[1].message)
+        assertEquals("Info message via interface", entries[2].message)
+        assertEquals("Warn message via interface", entries[3].message)
+        assertEquals("Error message via interface", entries[4].message)
+    }
+
+    @Test
+    fun `isLogEnabledFlow reflects state changes and returns 0 when disabled`() {
+        assertTrue(LogManager.isLogEnabledFlow.value)
+
+        LogManager.setLogEnabled(false)
+        assertFalse(LogManager.isLogEnabledFlow.value)
+
+        val logger: AppLogger = LogManager
+        val retV = logger.v("Tag", "Should return 0")
+        val retD = logger.d("Tag", "Should return 0")
+        val retI = logger.i("Tag", "Should return 0")
+        val retW = logger.w("Tag", "Should return 0")
+        val retE = logger.e("Tag", "Should return 0")
+
+        assertEquals(0, retV)
+        assertEquals(0, retD)
+        assertEquals(0, retI)
+        assertEquals(0, retW)
+        assertEquals(0, retE)
+
+        LogManager.setLogEnabled(true)
+        assertTrue(LogManager.isLogEnabledFlow.value)
     }
 }

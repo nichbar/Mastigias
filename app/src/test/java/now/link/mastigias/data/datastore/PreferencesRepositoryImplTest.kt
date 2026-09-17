@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.ThemeMode
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.ui.library.LibrarySortOrder
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.After
@@ -125,5 +126,18 @@ class PreferencesRepositoryImplTest {
 
         repository.setThemeMode(ThemeMode.LIGHT)
         assertEquals(ThemeMode.LIGHT, repository.themeModeFlow.first())
+    }
+
+    @Test
+    fun `loggingEnabledFlow defaults to true and setLoggingEnabled updates DataStore and LogManager`() = runBlocking {
+        assertEquals(true, repository.loggingEnabledFlow.first())
+
+        repository.setLoggingEnabled(false)
+        assertEquals(false, repository.loggingEnabledFlow.first())
+        assertEquals(false, LogManager.isLogEnabled())
+
+        repository.setLoggingEnabled(true)
+        assertEquals(true, repository.loggingEnabledFlow.first())
+        assertEquals(true, LogManager.isLogEnabled())
     }
 }

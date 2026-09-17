@@ -1,12 +1,19 @@
 package now.link.mastigias.data.taglib
 
+import now.link.mastigias.core.logging.LogManager
+
 object TagLibBridge {
+    private const val TAG = "TagLibBridge"
+
     val isLoaded: Boolean = try {
         System.loadLibrary("mastigias-native")
+        LogManager.i(TAG, "Native library 'mastigias-native' loaded successfully")
         true
     } catch (e: UnsatisfiedLinkError) {
+        LogManager.w(TAG, "Failed to load 'mastigias-native' (UnsatisfiedLinkError): ${e.message}")
         false
     } catch (e: SecurityException) {
+        LogManager.w(TAG, "Failed to load 'mastigias-native' (SecurityException): ${e.message}")
         false
     }
 

@@ -3,6 +3,7 @@ package now.link.mastigias.data.datastore
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.PreferencesRepository
@@ -168,11 +170,31 @@ class PreferencesRepositoryImpl @Inject constructor(
         }
     }
 
+    override val loggingEnabledFlow: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { prefs ->
+            prefs[KEY_LOGGING_ENABLED] ?: true
+        }
+
+    override suspend fun setLoggingEnabled(enabled: Boolean) {
+        LogManager.setLogEnabled(enabled)
+        dataStore.edit { prefs ->
+            prefs[KEY_LOGGING_ENABLED] = enabled
+        }
+    }
+
     companion object {
         val KEY_SORT_ORDER = stringPreferencesKey("sort_order")
         val KEY_SORT_DIRECTION = stringPreferencesKey("sort_direction")
         val KEY_FOLDER_FILTERS = stringPreferencesKey("folder_filters")
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        val KEY_LOGGING_ENABLED = booleanPreferencesKey("logging_enabled")
 
         fun create(context: Context): PreferencesRepositoryImpl =
             PreferencesRepositoryImpl(context.mastigiasPreferencesDataStore)

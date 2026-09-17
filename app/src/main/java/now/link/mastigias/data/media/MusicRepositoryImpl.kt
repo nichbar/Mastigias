@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import now.link.mastigias.core.common.AppDispatchers
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.database.dao.TrackDao
 import now.link.mastigias.data.database.entity.TrackEntity
 import now.link.mastigias.data.database.entity.toDomain
@@ -27,6 +28,10 @@ class MusicRepositoryImpl @Inject constructor(
     private val tagEngine: TagEngine,
     private val dispatchers: AppDispatchers
 ) : MusicRepository {
+
+    companion object {
+        private const val TAG = "MusicRepository"
+    }
 
     override fun observeTracks(): Flow<List<Track>> =
         trackDao.observeAll()
@@ -114,6 +119,7 @@ class MusicRepositoryImpl @Inject constructor(
 
     override suspend fun syncMediaStore(): Result<Unit> = withContext(dispatchers.io) {
         runCatching {
+            LogManager.d(TAG, "Starting syncMediaStore")
             val mediaStoreItems = mediaStoreDataSource.queryAudioTracks()
             val existingArtworkStatuses = trackDao.getArtworkStatuses().associate { it.id to it.hasArtwork }
 
@@ -174,17 +180,27 @@ class MusicRepositoryImpl @Inject constructor(
                 trackDao.upsertTracks(entities)
                 val validIds = entities.map { it.id }
                 trackDao.pruneDeletedTracks(validIds)
+                LogManager.i(TAG, "Synced ${entities.size} tracks into database and pruned stale entries")
+            } else {
+                LogManager.d(TAG, "No tracks returned from MediaStore to sync")
             }
+            Unit
+        }.onFailure { ex ->
+            LogManager.e(TAG, "syncMediaStore failed: ${ex.message}", ex)
         }
     }
 
     override suspend fun writeTrackMetadata(trackId: Long, patch: TagPatch): Result<Unit> =
         withContext(dispatchers.io) {
             val track = trackDao.getTrackById(trackId)
-                ?: return@withContext Result.failure(
-                    IllegalArgumentException("Track with ID $trackId not found in database")
-                )
+                ?: run {
+                    LogManager.w(TAG, "writeTrackMetadata failed: track $trackId not found in database")
+                    return@withContext Result.failure(
+                        IllegalArgumentException("Track with ID $trackId not found in database")
+                    )
+                }
 
+            LogManager.d(TAG, "Delegating writeTrackMetadata for track $trackId (${track.path}) to ScopedStorageManager")
             scopedStorageManager.writeSingleTrack(
                 trackId = trackId,
                 sourcePath = track.path,
@@ -195,15 +211,21 @@ class MusicRepositoryImpl @Inject constructor(
 
     override suspend fun deleteTrack(trackId: Long): Result<Unit> = withContext(dispatchers.io) {
         runCatching {
+            LogManager.i(TAG, "Deleting track $trackId")
             val track = trackDao.getTrackById(trackId)
             mediaStoreDataSource.deleteTrack(trackId)
             if (track != null) {
                 val file = File(track.path)
                 if (file.exists() && file.canWrite()) {
-                    file.delete()
+                    val deleted = file.delete()
+                    LogManager.d(TAG, "Direct file deletion for track $trackId (${track.path}): $deleted")
                 }
             }
             trackDao.deleteTrackById(trackId)
+            LogManager.d(TAG, "Removed track $trackId from database")
+            Unit
+        }.onFailure { ex ->
+            LogManager.e(TAG, "Failed to delete track $trackId: ${ex.message}", ex)
         }
     }
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.core.constants.AudioFormats
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.database.dao.TrackDao
 import now.link.mastigias.domain.engine.TagEngine
 import now.link.mastigias.domain.model.TagField
@@ -27,6 +28,10 @@ open class ScopedStorageManager {
     private val tagEngine: TagEngine
     private val trackDao: TrackDao
     private val dispatchers: AppDispatchers
+
+    companion object {
+        private const val TAG = "ScopedStorageManager"
+    }
 
     @Inject
     constructor(
@@ -70,6 +75,7 @@ open class ScopedStorageManager {
         mimeType: String
     ): Result<Unit> = withContext(NonCancellable + dispatchers.io) {
         runCatching {
+            LogManager.d(TAG, "Starting atomic write protocol for track $trackId ($sourcePath)")
             val ctx = context ?: throw IOException("Context is required for writing audio track")
             val contentUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -99,8 +105,10 @@ open class ScopedStorageManager {
                 if (originalSize == 0L) {
                     throw IOException("Source audio file copied to work directory is 0 bytes: $sourcePath")
                 }
+                LogManager.v(TAG, "Step 2: Work copy created (${workFile.name}, $originalSize bytes)")
 
                 // Step 3: Native TagLib write on work copy
+                LogManager.v(TAG, "Step 3: Invoking TagLib write on work copy for track $trackId")
                 val writeResult = tagEngine.writeMetadata(workFile.absolutePath, patch)
                 writeResult.getOrThrow()
 
@@ -118,6 +126,10 @@ open class ScopedStorageManager {
                 if ((currentTrack?.durationMs ?: 0L) > 0L && readBack.durationMs <= 0L) {
                     throw IOException("Integrity check failed: audio duration corrupted after write on $sourcePath")
                 }
+                LogManager.v(
+                    TAG,
+                    "Step 4: Integrity verified for track $trackId ($originalSize -> $newSize bytes, ${readBack.durationMs}ms)"
+                )
 
                 // Step 5: Stream verified bytes back to target destination
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -158,6 +170,7 @@ open class ScopedStorageManager {
                         } ?: throw IOException("Unable to write to file $sourcePath via direct or URI access")
                     }
                 }
+                LogManager.v(TAG, "Step 5: Transferred verified bytes to destination for track $trackId")
 
                 // Step 7: Post-write MediaScanner sync with accurate 1:1 MIME type
                 val effectiveMimeType = mimeType.ifBlank { AudioFormats.getMimeTypeForPath(sourcePath) }
@@ -165,7 +178,9 @@ open class ScopedStorageManager {
                     ctx,
                     arrayOf(sourcePath),
                     arrayOf(effectiveMimeType)
-                ) { _, _ -> }
+                ) { scannedPath, scannedUri ->
+                    LogManager.v(TAG, "Step 7: MediaScanner finished for $scannedPath (URI: $scannedUri)")
+                }
 
                 // Step 8: Update Room database cache
                 val hasArtwork = when {
@@ -207,12 +222,17 @@ open class ScopedStorageManager {
                     )
                     trackDao.upsertTracks(listOf(updatedTrack))
                 }
+                LogManager.i(TAG, "Step 8: Atomic write protocol finished successfully for track $trackId ($sourcePath)")
+                Unit
             } finally {
                 // Step 6: Guaranteed temporary work file cleanup
                 if (workFile.exists()) {
-                    workFile.delete()
+                    val deleted = workFile.delete()
+                    LogManager.v(TAG, "Step 6: Work copy cleanup ${workFile.name} (deleted: $deleted)")
                 }
             }
+        }.onFailure { ex ->
+            LogManager.e(TAG, "Atomic write protocol failed for track $trackId ($sourcePath): ${ex.message}", ex)
         }
     }
 }

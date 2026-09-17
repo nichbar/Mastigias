@@ -9,6 +9,7 @@ import coil3.fetch.Fetcher
 import coil3.fetch.ImageFetchResult
 import coil3.request.Options
 import coil3.size.pxOrElse
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.domain.engine.TagEngine
 import now.link.mastigias.domain.model.Track
 import javax.inject.Inject
@@ -31,9 +32,16 @@ class TrackArtworkFetcher(
     private val options: Options
 ) : Fetcher {
 
+    companion object {
+        private const val TAG = "TrackArtworkFetcher"
+    }
+
     override suspend fun fetch(): FetchResult? {
         val artworkBytes = tagEngine.readArtwork(data.path).getOrNull()
-            ?: return null
+            ?: run {
+                LogManager.v(TAG, "No artwork found for track ${data.id} (${data.path})")
+                return null
+            }
 
         if (artworkBytes.isEmpty()) {
             return null
@@ -46,6 +54,7 @@ class TrackArtworkFetcher(
         BitmapFactory.decodeByteArray(artworkBytes, 0, artworkBytes.size, boundsOptions)
 
         if (boundsOptions.outWidth <= 0 || boundsOptions.outHeight <= 0) {
+            LogManager.w(TAG, "Invalid artwork dimensions for track ${data.id}: ${boundsOptions.outWidth}x${boundsOptions.outHeight}")
             return null
         }
 
@@ -67,7 +76,12 @@ class TrackArtworkFetcher(
         }
 
         val bitmap = BitmapFactory.decodeByteArray(artworkBytes, 0, artworkBytes.size, decodeOptions)
-            ?: return null
+            ?: run {
+                LogManager.w(TAG, "Failed to decode artwork bitmap for track ${data.id}")
+                return null
+            }
+
+        LogManager.v(TAG, "Fetched and decoded artwork for track ${data.id} (${bitmap.width}x${bitmap.height}, sampleSize=$inSampleSize)")
 
         return ImageFetchResult(
             image = bitmap.asImage(),

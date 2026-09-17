@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.domain.model.Album
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
@@ -49,6 +50,10 @@ class LibraryViewModel @Inject constructor(
     private val syncMediaStoreUseCase: SyncMediaStoreUseCase,
     private val preferencesRepository: PreferencesRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "LibraryViewModel"
+    }
 
     private val _searchQuery = MutableStateFlow("")
     private val _isUntaggedFilterActive = MutableStateFlow(false)
@@ -253,11 +258,16 @@ class LibraryViewModel @Inject constructor(
 
     fun sync() {
         if (_isSyncing.value) return
+        LogManager.d(TAG, "Triggering media store sync from library")
         viewModelScope.launch {
             _isSyncing.value = true
             val result = syncMediaStoreUseCase()
             if (result.isFailure) {
-                _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to sync media store"
+                val errorMsg = result.exceptionOrNull()?.message ?: "Failed to sync media store"
+                LogManager.e(TAG, "Media store sync failed in library: $errorMsg")
+                _errorMessage.value = errorMsg
+            } else {
+                LogManager.i(TAG, "Media store sync succeeded in library")
             }
             _isSyncing.value = false
         }

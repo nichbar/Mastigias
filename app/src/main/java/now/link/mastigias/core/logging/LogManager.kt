@@ -6,6 +6,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import now.link.mastigias.domain.logging.AppLogger
 import now.link.mastigias.domain.model.LogEntry
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  * - Maintains a thread-safe circular buffer of logs (up to 10,000 entries)
  * - Exposes real-time updates via StateFlow
  */
-object LogManager {
+object LogManager : AppLogger {
 
     private const val TAG = "LogManager"
     private const val PREF_NAME = "mastigias_log_prefs"
@@ -25,6 +26,9 @@ object LogManager {
     private val logEntries = ConcurrentLinkedQueue<LogEntry>()
     private val _logEntriesFlow = MutableStateFlow<List<LogEntry>>(emptyList())
     val logEntriesFlow: StateFlow<List<LogEntry>> = _logEntriesFlow.asStateFlow()
+
+    private val _isLogEnabledFlow = MutableStateFlow(true)
+    val isLogEnabledFlow: StateFlow<Boolean> = _isLogEnabledFlow.asStateFlow()
 
     private var sharedPreferences: SharedPreferences? = null
 
@@ -41,6 +45,7 @@ object LogManager {
         } catch (_: Exception) {
             isLogEnabled = true
         }
+        _isLogEnabledFlow.value = isLogEnabled
 
         if (isLogEnabled) {
             addLogEntry(LogEntry.LogLevel.INFO, TAG, "LogManager initialized, logging enabled")
@@ -52,6 +57,7 @@ object LogManager {
      */
     fun setLogEnabled(enabled: Boolean) {
         isLogEnabled = enabled
+        _isLogEnabledFlow.value = enabled
         sharedPreferences?.edit()?.putBoolean(PREF_LOG_ENABLED, enabled)?.apply()
 
         if (enabled) {
@@ -120,6 +126,7 @@ object LogManager {
      */
     fun resetForTesting() {
         isLogEnabled = true
+        _isLogEnabledFlow.value = true
         synchronized(logEntries) {
             logEntries.clear()
             _logEntriesFlow.value = emptyList()
@@ -149,80 +156,93 @@ object LogManager {
 
     // Wrapper methods for Android Log.* calls
 
-    fun v(tag: String, msg: String): Int {
+    override fun v(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.VERBOSE, tag, msg)
         addLogEntry(LogEntry.LogLevel.VERBOSE, tag, msg)
         return result
     }
 
-    fun v(tag: String, msg: String, tr: Throwable): Int {
+    override fun v(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.VERBOSE, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.VERBOSE, tag, msg, tr)
         return result
     }
 
-    fun d(tag: String, msg: String): Int {
+    override fun d(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.DEBUG, tag, msg)
         addLogEntry(LogEntry.LogLevel.DEBUG, tag, msg)
         return result
     }
 
-    fun d(tag: String, msg: String, tr: Throwable): Int {
+    override fun d(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.DEBUG, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.DEBUG, tag, msg, tr)
         return result
     }
 
-    fun i(tag: String, msg: String): Int {
+    override fun i(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.INFO, tag, msg)
         addLogEntry(LogEntry.LogLevel.INFO, tag, msg)
         return result
     }
 
-    fun i(tag: String, msg: String, tr: Throwable): Int {
+    override fun i(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.INFO, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.INFO, tag, msg, tr)
         return result
     }
 
-    fun w(tag: String, msg: String): Int {
+    override fun w(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.WARN, tag, msg)
         addLogEntry(LogEntry.LogLevel.WARN, tag, msg)
         return result
     }
 
-    fun w(tag: String, msg: String, tr: Throwable): Int {
+    override fun w(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.WARN, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.WARN, tag, msg, tr)
         return result
     }
 
-    fun w(tag: String, tr: Throwable): Int {
+    override fun w(tag: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val msg = tr.message ?: "Exception"
         val result = safeAndroidLog(Log.WARN, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.WARN, tag, msg, tr)
         return result
     }
 
-    fun e(tag: String, msg: String): Int {
+    override fun e(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.ERROR, tag, msg)
         addLogEntry(LogEntry.LogLevel.ERROR, tag, msg)
         return result
     }
 
-    fun e(tag: String, msg: String, tr: Throwable): Int {
+    override fun e(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.ERROR, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.ERROR, tag, msg, tr)
         return result
     }
 
     fun wtf(tag: String, msg: String): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.ASSERT, tag, msg)
         addLogEntry(LogEntry.LogLevel.ASSERT, tag, msg)
         return result
     }
 
     fun wtf(tag: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val msg = tr.message ?: "WTF Exception"
         val result = safeAndroidLog(Log.ASSERT, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.ASSERT, tag, msg, tr)
@@ -230,6 +250,7 @@ object LogManager {
     }
 
     fun wtf(tag: String, msg: String, tr: Throwable): Int {
+        if (!isLogEnabled) return 0
         val result = safeAndroidLog(Log.ASSERT, tag, msg, tr)
         addLogEntry(LogEntry.LogLevel.ASSERT, tag, msg, tr)
         return result

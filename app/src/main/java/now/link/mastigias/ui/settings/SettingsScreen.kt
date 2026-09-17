@@ -38,6 +38,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -353,6 +354,27 @@ fun SettingsScreen(
                             text = "High-performance native audio tag editor powered by TagLib C++ via JNI. Features 8-step Scoped Storage atomic write protocol, FLAC picture block encoding, multi-file batch editing, and SongSync lyrics integration.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            text = stringResource(id = R.string.enable_logging),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = stringResource(id = R.string.enable_logging_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = uiState.isLoggingEnabled,
+                            onCheckedChange = { viewModel.setLoggingEnabled(it) }
                         )
                     }
                 )
