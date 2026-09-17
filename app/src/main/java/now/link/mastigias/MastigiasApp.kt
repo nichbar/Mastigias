@@ -6,6 +6,7 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
 import dagger.hilt.android.HiltAndroidApp
+import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.image.TrackArtworkFetcher
 import now.link.mastigias.data.image.TrackArtworkKeyer
 import now.link.mastigias.data.image.TrackKeyer
@@ -17,6 +18,11 @@ class MastigiasApp : Application(), SingletonImageLoader.Factory {
 
     @Inject
     lateinit var tagEngine: TagEngine
+
+    override fun onCreate() {
+        super.onCreate()
+        LogManager.initialize(this)
+    }
 
     override fun newImageLoader(context: Context): ImageLoader {
         return ImageLoader.Builder(context)

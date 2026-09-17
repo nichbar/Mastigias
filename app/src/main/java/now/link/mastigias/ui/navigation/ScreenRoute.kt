@@ -21,5 +21,8 @@ sealed interface ScreenRoute {
     data object Settings : ScreenRoute
 
     @Serializable
+    data object Logs : ScreenRoute
+
+    @Serializable
     data object FolderManager : ScreenRoute
 }

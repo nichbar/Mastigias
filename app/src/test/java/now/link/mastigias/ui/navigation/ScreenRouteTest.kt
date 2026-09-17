@@ -21,6 +21,7 @@ class ScreenRouteTest {
     fun `ScreenRoute singletons are equal`() {
         assertEquals(ScreenRoute.Library, ScreenRoute.Library)
         assertEquals(ScreenRoute.Settings, ScreenRoute.Settings)
+        assertEquals(ScreenRoute.Logs, ScreenRoute.Logs)
         assertEquals(ScreenRoute.FolderManager, ScreenRoute.FolderManager)
     }
 }

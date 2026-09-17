@@ -18,6 +18,7 @@ import now.link.mastigias.ui.editor.EditorScreen
 import now.link.mastigias.ui.editor.EditorViewModel
 import now.link.mastigias.ui.library.LibraryScreen
 import now.link.mastigias.ui.library.LibraryViewModel
+import now.link.mastigias.ui.logs.LogsScreen
 import now.link.mastigias.ui.settings.SettingsScreen
 import now.link.mastigias.ui.settings.SettingsViewModel
 
@@ -95,6 +96,17 @@ fun MastigiasNavHost(
             SettingsScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToLogs = {
+                    navController.navigate(ScreenRoute.Logs)
+                }
+            )
+        }
+
+        composable<ScreenRoute.Logs> {
+            LogsScreen(
+                onBackClick = {
                     navController.popBackStack()
                 }
             )

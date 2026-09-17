@@ -3,4 +3,20 @@
     <string name="action_edit_album">Edit Album</string>
     <string name="edit_album_description">Edit all songs in this album</string>
     <string name="no_other_album_tracks_found">No other tracks found in this album</string>
+
+    <!-- Logs -->
+    <string name="app_logs">App Logs</string>
+    <string name="view_logs">View Logs</string>
+    <string name="in_app_diagnostic_buffer">In-app diagnostic buffer</string>
+    <string name="no_logs_yet">No logs captured yet</string>
+    <string name="logging_disabled">In-memory logging is disabled.\nEnable it in settings to capture logs.</string>
+    <string name="logs_cleared">Logs cleared</string>
+    <string name="logs_copied_to_clipboard">%d log entries copied to clipboard</string>
+    <string name="no_logs_to_copy">No logs to copy</string>
+    <string name="clear_logs">Clear Logs</string>
+    <string name="copy_logs">Copy Logs</string>
+    <string name="scroll_to_top">Scroll to Top</string>
+    <string name="scroll_to_bottom">Scroll to Bottom</string>
+    <string name="back">Back</string>
+    <string name="menu">Menu</string>
 </resources>
