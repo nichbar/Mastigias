@@ -72,13 +72,8 @@ fun MastigiasNavHost(
             )
         }
 
-        composable<ScreenRoute.Editor> { backStackEntry ->
-            val route = backStackEntry.toRoute<ScreenRoute.Editor>()
+        composable<ScreenRoute.Editor> {
             val viewModel: EditorViewModel = hiltViewModel()
-
-            LaunchedEffect(route.trackIds) {
-                viewModel.initialize(route.trackIds)
-            }
 
             EditorScreen(
                 viewModel = viewModel,

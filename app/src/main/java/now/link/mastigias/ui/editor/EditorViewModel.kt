@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.model.ArtworkData
@@ -31,7 +32,8 @@ class EditorViewModel @Inject constructor(
     private val writeTrackMetadataUseCase: WriteTrackMetadataUseCase,
     private val batchWriteMetadataUseCase: BatchWriteMetadataUseCase,
     private val getTracksByAlbumUseCase: GetTracksByAlbumUseCase,
-    private val mediaStoreDataSource: MediaStoreDataSource
+    private val mediaStoreDataSource: MediaStoreDataSource,
+    private val dispatchers: AppDispatchers = AppDispatchers()
 ) : ViewModel() {
 
     companion object {
@@ -48,6 +50,8 @@ class EditorViewModel @Inject constructor(
     private val _events = MutableSharedFlow<EditorUiEvent>()
     val events: SharedFlow<EditorUiEvent> = _events.asSharedFlow()
 
+    private var initializedTrackIds: LongArray? = null
+
     init {
         val route = runCatching { savedStateHandle.toRoute<ScreenRoute.Editor>() }.getOrNull()
         val routeIds = route?.trackIds ?: savedStateHandle.get<LongArray>("trackIds")
@@ -58,6 +62,10 @@ class EditorViewModel @Inject constructor(
 
     fun initialize(trackIds: LongArray) {
         if (trackIds.isEmpty()) return
+        if (initializedTrackIds?.contentEquals(trackIds) == true) {
+            return
+        }
+        initializedTrackIds = trackIds.clone()
         LogManager.d(TAG, "Initializing editor with ${trackIds.size} track(s): ${trackIds.joinToString()}")
 
         if (trackIds.size == 1) {
@@ -86,7 +94,7 @@ class EditorViewModel @Inject constructor(
     }
 
     private fun loadSingleTrackMetadata(trackId: Long) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             LogManager.d(TAG, "Loading metadata for single track $trackId")
             val result = readTrackMetadataUseCase(trackId)
             if (result.isSuccess) {
@@ -220,7 +228,7 @@ class EditorViewModel @Inject constructor(
         val artistName = state.fields[TagField.ARTIST]?.value?.trim()
             ?: state.initialMetadata?.fields?.get(TagField.ARTIST)?.trim()
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val tracks = getTracksByAlbumUseCase(albumTitle, artistName)
             val finalTracks = if (tracks.size <= 1 && artistName != null) {
                 getTracksByAlbumUseCase(albumTitle, null).ifEmpty { tracks }
@@ -286,7 +294,7 @@ class EditorViewModel @Inject constructor(
         val state = _uiState.value
         _uiState.value = _uiState.value.copy(isSaving = true, error = null)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val updatedFields = mutableMapOf<TagField, String>()
             val deletedFields = mutableSetOf<TagField>()
 
@@ -327,7 +335,7 @@ class EditorViewModel @Inject constructor(
         val state = _uiState.value
         _uiState.value = _uiState.value.copy(isSaving = true, saveProgress = 0f, error = null)
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             batchWriteMetadataUseCase(
                 trackIds = trackIds,
                 fieldEdits = state.fields,

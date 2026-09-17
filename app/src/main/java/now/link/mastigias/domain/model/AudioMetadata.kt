@@ -8,5 +8,6 @@ data class AudioMetadata(
     val bitrateKbps: Int,
     val sampleRateHz: Int,
     val channels: Int,
-    val durationMs: Long
+    val durationMs: Long,
+    val fileSizeBytes: Long = 0L
 )

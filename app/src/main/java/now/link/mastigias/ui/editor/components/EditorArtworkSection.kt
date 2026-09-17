@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import now.link.mastigias.core.common.ImageUtils
 import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
@@ -80,6 +82,18 @@ fun EditorArtworkSection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Artwork preview box
+        val imageRequest = remember(artwork) {
+            if (artwork != null && artwork.binaryData.isNotEmpty()) {
+                val cacheKey = "artwork_${artwork.width}x${artwork.height}_${artwork.mimeType}_${artwork.binaryData.size}_${artwork.binaryData.contentHashCode()}"
+                ImageRequest.Builder(context)
+                    .data(artwork.binaryData)
+                    .memoryCacheKey(cacheKey)
+                    .build()
+            } else {
+                null
+            }
+        }
+
         Box(
             modifier = Modifier
                 .size(160.dp)
@@ -87,9 +101,9 @@ fun EditorArtworkSection(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            if (artwork != null && artwork.binaryData.isNotEmpty()) {
+            if (imageRequest != null) {
                 AsyncImage(
-                    model = artwork.binaryData,
+                    model = imageRequest,
                     contentDescription = "Cover Artwork",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

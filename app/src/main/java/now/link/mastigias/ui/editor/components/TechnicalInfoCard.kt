@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import now.link.mastigias.domain.model.AudioMetadata
-import java.io.File
 import java.util.Locale
 
 @Composable
@@ -26,14 +25,13 @@ fun TechnicalInfoCard(
     metadata: AudioMetadata,
     modifier: Modifier = Modifier
 ) {
-    val file = File(metadata.path)
-    val fileSizeFormatted = if (file.exists()) {
-        formatFileSize(file.length())
+    val fileSizeFormatted = if (metadata.fileSizeBytes > 0L) {
+        formatFileSize(metadata.fileSizeBytes)
     } else {
         "--"
     }
 
-    val containerFormat = file.extension.uppercase(Locale.ROOT).ifBlank { "AUDIO" }
+    val containerFormat = metadata.path.substringAfterLast('.', "").uppercase(Locale.ROOT).ifBlank { "AUDIO" }
 
     val channelsFormatted = when (metadata.channels) {
         1 -> "Mono (1 channel)"

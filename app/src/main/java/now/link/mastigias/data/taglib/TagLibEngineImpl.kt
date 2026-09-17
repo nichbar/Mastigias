@@ -37,7 +37,8 @@ class TagLibEngineImpl @Inject constructor(
                 }
 
                 LogManager.v(TAG, "Read metadata from $path in ${System.currentTimeMillis() - start}ms")
-                parseBundleToAudioMetadata(path, bundle)
+                val fileSize = runCatching { java.io.File(path).length() }.getOrDefault(0L)
+                parseBundleToAudioMetadata(path, bundle, fileSize)
             }
         }
 
@@ -105,7 +106,8 @@ class TagLibEngineImpl @Inject constructor(
             bitrateKbps = 320,
             sampleRateHz = 44100,
             channels = 2,
-            durationMs = 0L
+            durationMs = 0L,
+            fileSizeBytes = 0L
         )
     }
 
@@ -174,7 +176,7 @@ class TagLibEngineImpl @Inject constructor(
             return fieldMap
         }
 
-        fun parseBundleToAudioMetadata(path: String, bundle: NativeTagBundle): AudioMetadata {
+        fun parseBundleToAudioMetadata(path: String, bundle: NativeTagBundle, fileSizeBytes: Long = 0L): AudioMetadata {
             val fieldMap = mapTagsToFields(bundle.keys, bundle.values)
             return AudioMetadata(
                 trackId = 0L,
@@ -184,7 +186,8 @@ class TagLibEngineImpl @Inject constructor(
                 bitrateKbps = bundle.bitrateKbps,
                 sampleRateHz = bundle.sampleRateHz,
                 channels = bundle.channels,
-                durationMs = bundle.durationMs
+                durationMs = bundle.durationMs,
+                fileSizeBytes = fileSizeBytes
             )
         }
     }
