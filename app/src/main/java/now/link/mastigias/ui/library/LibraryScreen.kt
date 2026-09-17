@@ -1,6 +1,5 @@
 package now.link.mastigias.ui.library
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +33,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -54,7 +52,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import now.link.mastigias.ui.common.FloatingScrollToTop
 import now.link.mastigias.ui.common.MastigiasSearchBar
 import now.link.mastigias.ui.library.components.AlbumAccordionItem
-import now.link.mastigias.ui.library.components.MultiSelectTopBar
 import now.link.mastigias.ui.library.components.TrackListItem
 import now.link.mastigias.ui.library.dialogs.FolderFilterDialog
 import now.link.mastigias.ui.library.dialogs.SortDialog
@@ -76,10 +73,6 @@ fun LibraryScreen(
     var showSortDialog by remember { mutableStateOf(false) }
     var showFolderDialog by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = uiState.isMultiSelectMode) {
-        viewModel.onClearSelection()
-    }
-
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { msg ->
             snackbarHostState.showSnackbar(
@@ -94,61 +87,46 @@ fun LibraryScreen(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            if (uiState.isMultiSelectMode) {
-                MultiSelectTopBar(
-                    selectedCount = uiState.selectedTrackIds.size,
-                    onCloseClick = { viewModel.onClearSelection() },
-                    onSelectAllClick = { viewModel.onSelectAll() },
-                    onInvertClick = { viewModel.onInvertSelection() },
-                    onEditClick = {
-                        val ids = uiState.selectedTrackIds.toLongArray()
-                        if (ids.isNotEmpty()) {
-                            onNavigateToEditor(ids)
-                        }
-                    }
-                )
-            } else {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Mastigias",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    },
-                    actions = {
-                        // Sync button
-                        IconButton(
-                            onClick = { viewModel.sync() },
-                            enabled = !uiState.isSyncing
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Scan media"
-                            )
-                        }
-                        // Sort button
-                        IconButton(onClick = { showSortDialog = true }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Sort library",
-                                modifier = Modifier.rotate(-90f)
-                            )
-                        }
-                        // Settings button
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings"
-                            )
-                        }
-                    },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Mastigias",
+                        style = MaterialTheme.typography.titleLarge
                     )
+                },
+                actions = {
+                    // Sync button
+                    IconButton(
+                        onClick = { viewModel.sync() },
+                        enabled = !uiState.isSyncing
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Scan media"
+                        )
+                    }
+                    // Sort button
+                    IconButton(onClick = { showSortDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Sort library",
+                            modifier = Modifier.rotate(-90f)
+                        )
+                    }
+                    // Settings button
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
                 )
-            }
+            )
         },
         floatingActionButton = {
             FloatingScrollToTop(lazyListState = lazyListState)
@@ -243,18 +221,8 @@ fun LibraryScreen(
                             ) { album ->
                                 AlbumAccordionItem(
                                     album = album,
-                                    selectedTrackIds = uiState.selectedTrackIds,
-                                    isMultiSelectMode = uiState.isMultiSelectMode,
                                     onTrackClick = { track ->
-                                        viewModel.onTrackClicked(track) { id ->
-                                            onNavigateToEditor(longArrayOf(id))
-                                        }
-                                    },
-                                    onTrackLongClick = { track ->
-                                        viewModel.onTrackLongClicked(track)
-                                    },
-                                    onHeaderLongClick = {
-                                        viewModel.onAlbumHeaderLongClicked(album)
+                                        onNavigateToEditor(longArrayOf(track.id))
                                     },
                                     onEditAlbumClick = { albumToEdit ->
                                         viewModel.editAlbum(albumToEdit, onNavigateToEditor)
@@ -282,15 +250,8 @@ fun LibraryScreen(
                             ) { track ->
                                 TrackListItem(
                                     track = track,
-                                    isSelected = uiState.selectedTrackIds.contains(track.id),
-                                    isMultiSelectMode = uiState.isMultiSelectMode,
                                     onClick = {
-                                        viewModel.onTrackClicked(track) { id ->
-                                            onNavigateToEditor(longArrayOf(id))
-                                        }
-                                    },
-                                    onLongClick = {
-                                        viewModel.onTrackLongClicked(track)
+                                        onNavigateToEditor(longArrayOf(track.id))
                                     }
                                 )
                             }

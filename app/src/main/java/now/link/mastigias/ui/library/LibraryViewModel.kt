@@ -33,9 +33,7 @@ private data class FilterAndSortParams(
     val sortDirection: SortDirection
 )
 
-private data class SelectionAndStatus(
-    val selectedTrackIds: Set<Long>,
-    val isMultiSelectMode: Boolean,
+private data class SyncStatus(
     val isSyncing: Boolean,
     val errorMessage: String?
 )
@@ -55,8 +53,6 @@ class LibraryViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     private val _isUntaggedFilterActive = MutableStateFlow(false)
-    private val _selectedTrackIds = MutableStateFlow<Set<Long>>(emptySet())
-    private val _isMultiSelectMode = MutableStateFlow(false)
     private val _isSyncing = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
@@ -87,19 +83,17 @@ class LibraryViewModel @Inject constructor(
             }
         }
 
-    private val selectionAndStatusFlow: Flow<SelectionAndStatus> = combine(
-        _selectedTrackIds,
-        _isMultiSelectMode,
+    private val syncStatusFlow: Flow<SyncStatus> = combine(
         _isSyncing,
         _errorMessage
-    ) { selectedIds, isMultiSelect, isSyncing, error ->
-        SelectionAndStatus(selectedIds, isMultiSelect, isSyncing, error)
+    ) { isSyncing, error ->
+        SyncStatus(isSyncing, error)
     }
 
     val uiState: StateFlow<LibraryUiState> = combine(
         contentFlow,
         filterAndSortParamsFlow,
-        selectionAndStatusFlow
+        syncStatusFlow
     ) { (tracks, albums), filterParams, status ->
         LibraryUiState(
             tracks = tracks,
@@ -108,8 +102,6 @@ class LibraryViewModel @Inject constructor(
             sortOrder = filterParams.sortOrder,
             sortDirection = filterParams.sortDirection,
             isUntaggedFilterActive = filterParams.untaggedOnly,
-            selectedTrackIds = status.selectedTrackIds,
-            isMultiSelectMode = status.isMultiSelectMode,
             isSyncing = status.isSyncing,
             errorMessage = status.errorMessage
         )
@@ -148,91 +140,11 @@ class LibraryViewModel @Inject constructor(
         _isUntaggedFilterActive.value = !_isUntaggedFilterActive.value
     }
 
-    fun onTrackClicked(track: Track, onNavigateToEditor: (Long) -> Unit) {
-        if (_isMultiSelectMode.value) {
-            toggleTrackSelection(track.id)
-        } else {
-            onNavigateToEditor(track.id)
-        }
-    }
-
-    fun onTrackLongClicked(track: Track) {
-        if (!_isMultiSelectMode.value) {
-            _isMultiSelectMode.value = true
-        }
-        toggleTrackSelection(track.id)
-    }
-
-    fun onAlbumHeaderLongClicked(album: Album) {
-        if (!_isMultiSelectMode.value) {
-            _isMultiSelectMode.value = true
-        }
-        val currentSelected = _selectedTrackIds.value.toMutableSet()
-        val albumTrackIds = album.tracks.map { it.id }
-        if (currentSelected.containsAll(albumTrackIds)) {
-            currentSelected.removeAll(albumTrackIds.toSet())
-        } else {
-            currentSelected.addAll(albumTrackIds)
-        }
-        _selectedTrackIds.value = currentSelected
-        if (_selectedTrackIds.value.isEmpty()) {
-            _isMultiSelectMode.value = false
-        }
-    }
-
     fun editAlbum(album: Album, onNavigateToEditor: (LongArray) -> Unit) {
         val trackIds = album.tracks.map { it.id }.toLongArray()
         if (trackIds.isNotEmpty()) {
             onNavigateToEditor(trackIds)
         }
-    }
-
-    fun toggleTrackSelection(trackId: Long) {
-        val current = _selectedTrackIds.value.toMutableSet()
-        if (current.contains(trackId)) {
-            current.remove(trackId)
-        } else {
-            current.add(trackId)
-        }
-        _selectedTrackIds.value = current
-        if (current.isEmpty()) {
-            _isMultiSelectMode.value = false
-        }
-    }
-
-    fun onSelectAll() {
-        val currentState = uiState.value
-        val allIds = if (currentState.isAccordionView) {
-            currentState.albums.flatMap { it.tracks }.map { it.id }.toSet()
-        } else {
-            currentState.tracks.map { it.id }.toSet()
-        }
-        _selectedTrackIds.value = allIds
-        if (allIds.isNotEmpty()) {
-            _isMultiSelectMode.value = true
-        }
-    }
-
-    fun onInvertSelection() {
-        val currentState = uiState.value
-        val allIds = if (currentState.isAccordionView) {
-            currentState.albums.flatMap { it.tracks }.map { it.id }.toSet()
-        } else {
-            currentState.tracks.map { it.id }.toSet()
-        }
-        val currentSelected = _selectedTrackIds.value
-        val inverted = allIds - currentSelected
-        _selectedTrackIds.value = inverted
-        if (inverted.isEmpty()) {
-            _isMultiSelectMode.value = false
-        } else {
-            _isMultiSelectMode.value = true
-        }
-    }
-
-    fun onClearSelection() {
-        _selectedTrackIds.value = emptySet()
-        _isMultiSelectMode.value = false
     }
 
     fun sync() {

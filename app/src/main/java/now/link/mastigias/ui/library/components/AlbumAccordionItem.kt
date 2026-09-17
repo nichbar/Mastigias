@@ -2,12 +2,10 @@ package now.link.mastigias.ui.library.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,14 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,15 +47,10 @@ import now.link.mastigias.R
 import now.link.mastigias.domain.model.Album
 import now.link.mastigias.domain.model.Track
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumAccordionItem(
     album: Album,
-    selectedTrackIds: Set<Long>,
-    isMultiSelectMode: Boolean,
     onTrackClick: (Track) -> Unit,
-    onTrackLongClick: (Track) -> Unit,
-    onHeaderLongClick: () -> Unit,
     onEditAlbumClick: (Album) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -77,21 +67,13 @@ fun AlbumAccordionItem(
         } ?: album.tracks.firstOrNull()
     }
 
-    val areAllTracksSelected = remember(album.tracks, selectedTrackIds) {
-        album.tracks.isNotEmpty() && album.tracks.all { selectedTrackIds.contains(it.id) }
-    }
-
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = if (areAllTracksSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerLow
-            }
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column {
@@ -99,10 +81,7 @@ fun AlbumAccordionItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { isExpanded = !isExpanded },
-                        onLongClick = onHeaderLongClick
-                    )
+                    .clickable { isExpanded = !isExpanded }
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -149,20 +128,18 @@ fun AlbumAccordionItem(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                if (!isMultiSelectMode) {
-                    IconButton(
-                        onClick = { onEditAlbumClick(album) },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.edit_album_description),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    onClick = { onEditAlbumClick(album) },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit_album_description),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Arrow rotated 90 or -90 deg
                 Icon(
@@ -190,13 +167,9 @@ fun AlbumAccordionItem(
                     }
                     sortedTracks.forEach { track ->
                         key(track.id) {
-                            val isTrackSelected = selectedTrackIds.contains(track.id)
                             AlbumChildTrackRow(
                                 track = track,
-                                isSelected = isTrackSelected,
-                                isMultiSelectMode = isMultiSelectMode,
-                                onClick = { onTrackClick(track) },
-                                onLongClick = { onTrackLongClick(track) }
+                                onClick = { onTrackClick(track) }
                             )
                         }
                     }
@@ -206,30 +179,17 @@ fun AlbumAccordionItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AlbumChildTrackRow(
     track: Track,
-    isSelected: Boolean,
-    isMultiSelectMode: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
-    }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            )
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -262,21 +222,14 @@ private fun AlbumChildTrackRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        if (isMultiSelectMode) {
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = { onClick() }
-            )
-        } else {
-            // Duration
-            val formattedDuration = remember(track.durationMs) {
-                formatDuration(track.durationMs)
-            }
-            Text(
-                text = formattedDuration,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline
-            )
+        // Duration
+        val formattedDuration = remember(track.durationMs) {
+            formatDuration(track.durationMs)
         }
+        Text(
+            text = formattedDuration,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
     }
 }

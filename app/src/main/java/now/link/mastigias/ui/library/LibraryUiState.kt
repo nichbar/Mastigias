@@ -10,8 +10,6 @@ data class LibraryUiState(
     val sortOrder: LibrarySortOrder = LibrarySortOrder.TITLE,
     val sortDirection: SortDirection = SortDirection.ASCENDING,
     val isUntaggedFilterActive: Boolean = false,
-    val selectedTrackIds: Set<Long> = emptySet(),
-    val isMultiSelectMode: Boolean = false,
     val isSyncing: Boolean = false,
     val errorMessage: String? = null
 ) {

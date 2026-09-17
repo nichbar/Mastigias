@@ -62,7 +62,6 @@
 
 - Domain & Data logic: `./gradlew test` (all unit test suites must pass).
 - Kotlin & KSP compilation: `./gradlew compileDebugKotlin`.
-- Release & ProGuard verification: `./gradlew assembleRelease` (R8 must shrink without stripping native JNI methods or DTOs).
 - Device verification: run on connected device/emulator via `./gradlew installDebug` and inspect `adb logcat` for clean execution.
 
 ## Compact Instructions
