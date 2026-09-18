@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -60,9 +61,6 @@ import now.link.mastigias.ui.navigation.MastigiasNavHost
 import now.link.mastigias.ui.theme.MastigiasTheme
 import javax.inject.Inject
 
-private val lightScrim = android.graphics.Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
-private val darkScrim = android.graphics.Color.argb(0x80, 0x1b, 0x1b, 0x1b)
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -95,6 +93,9 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
 
         setContent {
             val currentThemeMode = themeMode ?: return@setContent
@@ -110,11 +111,18 @@ class MainActivity : ComponentActivity() {
                         android.graphics.Color.TRANSPARENT,
                         android.graphics.Color.TRANSPARENT,
                     ) { isDark },
-                    navigationBarStyle = SystemBarStyle.auto(
-                        lightScrim,
-                        darkScrim,
-                    ) { isDark },
+                    navigationBarStyle = if (isDark) {
+                        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT,
+                        )
+                    },
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
                 window.decorView.setBackgroundColor(
                     if (isDark) {
                         android.graphics.Color.argb(0xFF, 0x1C, 0x22, 0x28)
@@ -241,6 +249,7 @@ fun PermissionRationaleScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {

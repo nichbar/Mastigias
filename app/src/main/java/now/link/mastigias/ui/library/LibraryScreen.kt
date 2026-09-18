@@ -6,8 +6,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -140,10 +144,17 @@ fun LibraryScreen(
             FloatingScrollToTop(lazyListState = lazyListState)
         }
     ) { innerPadding ->
+        val layoutDirection = LocalLayoutDirection.current
+        val bottomNavPadding = innerPadding.calculateBottomPadding()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = innerPadding.calculateStartPadding(layoutDirection),
+                    end = innerPadding.calculateEndPadding(layoutDirection)
+                )
         ) {
             // Sync progress indicator (shown at top when library already has items)
             if (uiState.isSyncing && !uiState.isEmpty) {
@@ -278,12 +289,14 @@ fun LibraryScreen(
                             isSyncing = uiState.isSyncing,
                             searchQuery = uiState.searchQuery,
                             isUntaggedFilterActive = uiState.isUntaggedFilterActive,
-                            onSync = { viewModel.sync() }
+                            onSync = { viewModel.sync() },
+                            modifier = Modifier.padding(bottom = bottomNavPadding)
                         )
                     } else {
                         LazyColumn(
                             state = lazyListState,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = bottomNavPadding + 80.dp)
                         ) {
                             items(
                                 items = uiState.albums,
@@ -311,12 +324,14 @@ fun LibraryScreen(
                             isSyncing = uiState.isSyncing,
                             searchQuery = uiState.searchQuery,
                             isUntaggedFilterActive = uiState.isUntaggedFilterActive,
-                            onSync = { viewModel.sync() }
+                            onSync = { viewModel.sync() },
+                            modifier = Modifier.padding(bottom = bottomNavPadding)
                         )
                     } else {
                         LazyColumn(
                             state = lazyListState,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = bottomNavPadding + 80.dp)
                         ) {
                             items(
                                 items = uiState.tracks,

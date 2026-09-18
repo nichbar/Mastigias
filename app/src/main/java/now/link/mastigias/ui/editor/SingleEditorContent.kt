@@ -41,7 +41,8 @@ fun SingleEditorContent(
     onOpenLyricsClick: () -> Unit,
     onArtworkSelected: (ByteArray, String, Int, Int) -> Unit,
     onArtworkRemoved: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(bottom = 32.dp)
 ) {
     val basicFields = remember(uiState.fields) {
         uiState.fields.filter { it.key.category == TagCategory.BASIC }.toList()
@@ -54,7 +55,7 @@ fun SingleEditorContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp)
+        contentPadding = contentPadding
     ) {
         // Artwork section
         item(key = "single_artwork_section", contentType = "artwork") {

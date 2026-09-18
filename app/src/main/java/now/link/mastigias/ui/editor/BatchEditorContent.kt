@@ -40,7 +40,8 @@ fun BatchEditorContent(
     onArtworkRemoved: () -> Unit,
     onToggleBatchEnabled: (TagField, Boolean) -> Unit = { _, _ -> },
     onToggleArtworkBatch: (Boolean) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(bottom = 32.dp)
 ) {
     val validFields = remember(uiState.fields) {
         uiState.fields.filter { it.key.isBatchEditable }.toList()
@@ -48,7 +49,7 @@ fun BatchEditorContent(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp)
+        contentPadding = contentPadding
     ) {
         // Informational banner
         item(key = "batch_banner", contentType = "banner") {

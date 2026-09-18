@@ -14,7 +14,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
@@ -190,10 +194,17 @@ fun EditorScreen(
             }
         }
     ) { innerPadding ->
+        val layoutDirection = LocalLayoutDirection.current
+        val bottomContentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding() + 80.dp)
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(
+                    top = innerPadding.calculateTopPadding(),
+                    start = innerPadding.calculateStartPadding(layoutDirection),
+                    end = innerPadding.calculateEndPadding(layoutDirection)
+                )
         ) {
             if (isBatch) {
                 val batchTrackCount = (uiState.mode as EditorMode.Batch).trackIds.size
@@ -206,7 +217,8 @@ fun EditorScreen(
                     onAddFieldClick = { showAddFieldDialog = true },
                     onArtworkSelected = { bytes, mime, w, h -> viewModel.setArtwork(bytes, mime, w, h) },
                     onArtworkRemoved = { viewModel.removeArtwork() },
-                    onToggleArtworkBatch = { isEnabled -> viewModel.toggleArtworkBatch(isEnabled) }
+                    onToggleArtworkBatch = { isEnabled -> viewModel.toggleArtworkBatch(isEnabled) },
+                    contentPadding = bottomContentPadding
                 )
             } else {
                 SingleEditorContent(
@@ -216,7 +228,8 @@ fun EditorScreen(
                     onAddFieldClick = { showAddFieldDialog = true },
                     onOpenLyricsClick = { showLyricsSheet = true },
                     onArtworkSelected = { bytes, mime, w, h -> viewModel.setArtwork(bytes, mime, w, h) },
-                    onArtworkRemoved = { viewModel.removeArtwork() }
+                    onArtworkRemoved = { viewModel.removeArtwork() },
+                    contentPadding = bottomContentPadding
                 )
             }
 
