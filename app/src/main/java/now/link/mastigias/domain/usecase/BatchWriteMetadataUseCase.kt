@@ -14,7 +14,8 @@ data class BatchProgress(
     val current: Int,
     val total: Int,
     val currentTitle: String,
-    val failedIds: List<Long> = emptyList()
+    val failedIds: List<Long> = emptyList(),
+    val isComplete: Boolean = false
 )
 
 class BatchWriteMetadataUseCase @Inject constructor(
@@ -29,6 +30,11 @@ class BatchWriteMetadataUseCase @Inject constructor(
     ): Flow<BatchProgress> = flow {
         val total = trackIds.size
         val failedIds = mutableListOf<Long>()
+
+        if (total == 0) {
+            emit(BatchProgress(current = 0, total = 0, currentTitle = "Complete", isComplete = true))
+            return@flow
+        }
 
         // Filter only enabled fields and explicitly skip Lyrics per batch safety specs
         val updatedFields = fieldEdits
@@ -51,7 +57,7 @@ class BatchWriteMetadataUseCase @Inject constructor(
         for ((index, trackId) in trackIds.withIndex()) {
             val track = tracks[trackId]
             val title = track?.title ?: "Track #$trackId"
-            emit(BatchProgress(current = index + 1, total = total, currentTitle = title, failedIds = failedIds.toList()))
+            emit(BatchProgress(current = index, total = total, currentTitle = title, failedIds = failedIds.toList(), isComplete = false))
 
             if (track == null) {
                 failedIds.add(trackId)
@@ -64,6 +70,6 @@ class BatchWriteMetadataUseCase @Inject constructor(
             }
         }
 
-        emit(BatchProgress(current = total, total = total, currentTitle = "Complete", failedIds = failedIds.toList()))
+        emit(BatchProgress(current = total, total = total, currentTitle = "Complete", failedIds = failedIds.toList(), isComplete = true))
     }
 }

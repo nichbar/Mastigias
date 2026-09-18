@@ -71,7 +71,15 @@ fun EditorScreen(
     var pendingBatchTrackIds by remember { mutableStateOf<LongArray?>(null) }
     var showAddFieldDialog by remember { mutableStateOf(false) }
     var showLyricsSheet by remember { mutableStateOf(false) }
+    var hasNavigatedBack by remember { mutableStateOf(false) }
     val lyricsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val safeNavigateBack: () -> Unit = {
+        if (!hasNavigatedBack) {
+            hasNavigatedBack = true
+            onNavigateBack()
+        }
+    }
 
     // Android 11+ Scoped Storage write permission consent launcher
     val consentLauncher = rememberLauncherForActivityResult(
@@ -92,7 +100,7 @@ fun EditorScreen(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is EditorUiEvent.NavigateBack -> {
-                    onNavigateBack()
+                    safeNavigateBack()
                 }
                 is EditorUiEvent.RequestStorageConsent -> {
                     val request = IntentSenderRequest.Builder(event.intentSender).build()
@@ -111,11 +119,11 @@ fun EditorScreen(
 
     // Intercept back navigation if dirty; disable back action while saving is in progress
     val handleBackPress: () -> Unit = {
-        if (!uiState.isSaving) {
+        if (!uiState.isSaving && !hasNavigatedBack) {
             if (uiState.isDirty) {
                 showDiscardConfirmation = true
             } else {
-                onNavigateBack()
+                safeNavigateBack()
             }
         }
     }
@@ -247,7 +255,7 @@ fun EditorScreen(
         ConfirmationDialog(
             title = "Discard Changes?",
             message = "You have unsaved changes. Are you sure you want to discard them and exit?",
-            onConfirm = { onNavigateBack() },
+            onConfirm = { safeNavigateBack() },
             onDismiss = { showDiscardConfirmation = false },
             confirmButtonText = "Discard",
             isDestructive = true

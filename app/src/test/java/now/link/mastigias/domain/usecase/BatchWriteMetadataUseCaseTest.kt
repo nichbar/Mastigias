@@ -217,4 +217,47 @@ class BatchWriteMetadataUseCaseTest {
         assertEquals(listOf(2L, 999L), last.failedIds)
         assertEquals(3, last.total)
     }
+
+    @Test
+    fun `batch write emissions have isComplete false during processing and true only at completion`() = runBlocking {
+        val progressList = useCase(
+            trackIds = listOf(1L, 2L),
+            fieldEdits = mapOf(TagField.ARTIST to FieldEditState(isEnabledInBatch = true, value = "New Artist")),
+            artworkData = null,
+            isArtworkBatchEnabled = false,
+            removeArtwork = false
+        ).toList()
+
+        assertEquals(3, progressList.size)
+        // First track in-progress: current=0, total=2, isComplete=false
+        assertEquals(0, progressList[0].current)
+        assertEquals(2, progressList[0].total)
+        assertEquals(false, progressList[0].isComplete)
+
+        // Second track in-progress: current=1, total=2, isComplete=false
+        assertEquals(1, progressList[1].current)
+        assertEquals(2, progressList[1].total)
+        assertEquals(false, progressList[1].isComplete)
+
+        // Completion: current=2, total=2, isComplete=true
+        assertEquals(2, progressList[2].current)
+        assertEquals(2, progressList[2].total)
+        assertEquals(true, progressList[2].isComplete)
+    }
+
+    @Test
+    fun `batch write with empty trackIds emits single completion progress`() = runBlocking {
+        val progressList = useCase(
+            trackIds = emptyList(),
+            fieldEdits = emptyMap(),
+            artworkData = null,
+            isArtworkBatchEnabled = false,
+            removeArtwork = false
+        ).toList()
+
+        assertEquals(1, progressList.size)
+        assertTrue(progressList[0].isComplete)
+        assertEquals(0, progressList[0].total)
+        assertEquals(0, progressList[0].current)
+    }
 }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -78,7 +79,12 @@ fun MastigiasNavHost(
             EditorScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    val currentEntry = navController.currentBackStackEntry
+                    if (currentEntry?.destination?.hasRoute<ScreenRoute.Editor>() == true &&
+                        navController.previousBackStackEntry != null
+                    ) {
+                        navController.popBackStack()
+                    }
                 },
                 onNavigateToBatchEditor = { trackIds ->
                     navController.navigate(ScreenRoute.Editor(trackIds))
@@ -91,7 +97,12 @@ fun MastigiasNavHost(
             SettingsScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    val currentEntry = navController.currentBackStackEntry
+                    if (currentEntry?.destination?.hasRoute<ScreenRoute.Settings>() == true &&
+                        navController.previousBackStackEntry != null
+                    ) {
+                        navController.popBackStack()
+                    }
                 },
                 onNavigateToLogs = {
                     navController.navigate(ScreenRoute.Logs)
@@ -102,7 +113,12 @@ fun MastigiasNavHost(
         composable<ScreenRoute.Logs> {
             LogsScreen(
                 onBackClick = {
-                    navController.popBackStack()
+                    val currentEntry = navController.currentBackStackEntry
+                    if (currentEntry?.destination?.hasRoute<ScreenRoute.Logs>() == true &&
+                        navController.previousBackStackEntry != null
+                    ) {
+                        navController.popBackStack()
+                    }
                 }
             )
         }
@@ -112,7 +128,12 @@ fun MastigiasNavHost(
             SettingsScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    val currentEntry = navController.currentBackStackEntry
+                    if (currentEntry?.destination?.hasRoute<ScreenRoute.FolderManager>() == true &&
+                        navController.previousBackStackEntry != null
+                    ) {
+                        navController.popBackStack()
+                    }
                 }
             )
         }

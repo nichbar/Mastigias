@@ -3,6 +3,7 @@ package now.link.mastigias.ui.editor
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.engine.TagEngine
@@ -250,5 +251,31 @@ class EditorViewModelTest {
         assertTrue(viewModel.uiState.value.removeArtwork)
         assertNull(viewModel.uiState.value.artwork)
         assertTrue(viewModel.uiState.value.isDirty)
+    }
+
+    @Test
+    fun `batch save emits exactly one NavigateBack event upon completion`() = runBlocking {
+        val viewModel = createViewModel()
+        viewModel.initialize(longArrayOf(1L, 2L))
+
+        // Modify a field to make it dirty
+        viewModel.updateField(TagField.ARTIST, "Brand New Artist")
+        assertTrue(viewModel.uiState.value.isDirty)
+
+        val collectedEvents = mutableListOf<EditorUiEvent>()
+        val job = launch(Dispatchers.Unconfined) {
+            viewModel.events.collect { collectedEvents.add(it) }
+        }
+
+        viewModel.saveMetadata()
+
+        val navigateBackEvents = collectedEvents.filterIsInstance<EditorUiEvent.NavigateBack>()
+        assertEquals(1, navigateBackEvents.size)
+
+        val toastEvents = collectedEvents.filterIsInstance<EditorUiEvent.ShowToast>()
+        assertEquals(1, toastEvents.size)
+        assertEquals("All 2 tracks updated successfully", toastEvents.first().message)
+
+        job.cancel()
     }
 }

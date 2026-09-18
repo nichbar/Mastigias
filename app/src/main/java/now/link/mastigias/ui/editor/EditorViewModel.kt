@@ -370,10 +370,13 @@ class EditorViewModel @Inject constructor(
 
     fun saveMetadata() {
         val state = _uiState.value
+        if (state.isSaving || state.pendingConsentIntent != null) return
+
         val trackIds = when (val mode = state.mode) {
             is EditorMode.Single -> listOf(mode.trackId)
             is EditorMode.Batch -> mode.trackIds
         }
+        if (trackIds.isEmpty()) return
 
         // Check if Android 11+ Scoped Storage requires write consent dialog
         val consentIntent = mediaStoreDataSource.createBatchWriteRequest(trackIds)
@@ -454,6 +457,7 @@ class EditorViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isSaving = true, saveProgress = 0f, error = null)
 
         viewModelScope.launch(dispatchers.io) {
+            var hasCompleted = false
             batchWriteMetadataUseCase(
                 trackIds = trackIds,
                 fieldEdits = state.fields,
@@ -468,7 +472,8 @@ class EditorViewModel @Inject constructor(
                 }
                 _uiState.value = _uiState.value.copy(saveProgress = progressFraction)
 
-                if (progress.current == progress.total) {
+                if (progress.isComplete && !hasCompleted) {
+                    hasCompleted = true
                     _uiState.value = _uiState.value.copy(isSaving = false)
                     val succeeded = progress.total - progress.failedIds.size
                     LogManager.i(TAG, "Batch save completed: $succeeded succeeded, ${progress.failedIds.size} failed out of ${progress.total}")
