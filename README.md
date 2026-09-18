@@ -11,12 +11,12 @@
   A simple native Android music tag editor built with TagLib C++ via JNI.
 </p>
 
-Some tracks on my Android device used the `album-artist` field instead of `artist`, which prevented my music player from recognizing the actual artist. I asked an LLM to recommend an open-source Android app that could edit track metadata; however, some apps could only edit one track at a time (and I had an entire album to edit), while others simply failed to load the track list. Consequently, I decided to write a simple music tag editor that just works and supports batch editing.
-
 <p align="center">
   <a href="https://github.com/nichbar/Mastigias/releases/latest"><img src="https://img.shields.io/github/v/release/nichbar/Mastigias?logo=github&label=Release" alt="Latest Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License"></a>
 </p>
+
+Some tracks on my Android device used the `album-artist` field instead of `artist`, which prevented my music player from recognizing the actual artist. I asked an LLM to recommend an open-source Android app that could edit track metadata; however, some apps could only edit one track at a time (and I had an entire album to edit), while others simply failed to load the track list. Consequently, I decided to write a simple music tag editor that just works and supports batch editing.
 
 ## Screenshots
 
