@@ -8,6 +8,7 @@ import now.link.mastigias.domain.model.Album
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.model.Track
+import now.link.mastigias.ui.library.LibrarySortOrder
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -105,5 +106,20 @@ class GetAlbumsUseCaseTest {
 
         assertEquals(1, albums.size)
         assertEquals("Album A", albums[0].title)
+    }
+
+    @Test
+    fun `sorts albums by artist when sortOrder is ARTIST`() = runBlocking {
+        val albums = useCase(sortOrder = LibrarySortOrder.ARTIST).first()
+
+        assertEquals(2, albums.size)
+        assertEquals("Artist Alpha", albums[0].artist)
+        assertEquals("Artist Beta", albums[1].artist)
+    }
+
+    @Test
+    fun `filters out albums with no untagged tracks when untaggedOnly is true`() = runBlocking {
+        val albums = useCase(untaggedOnly = true).first()
+        assertTrue(albums.isEmpty())
     }
 }

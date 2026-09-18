@@ -8,6 +8,7 @@ import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.model.Track
 import now.link.mastigias.domain.repository.PreferencesRepository
 import now.link.mastigias.ui.library.LibrarySortOrder
+import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -18,6 +19,7 @@ class FakePreferencesRepository : PreferencesRepository {
     override val sortOrderFlow = MutableStateFlow(LibrarySortOrder.TITLE)
     override val sortDirectionFlow = MutableStateFlow(SortDirection.ASCENDING)
     override val folderFiltersFlow = MutableStateFlow<List<FolderFilter>>(emptyList())
+    override val viewModeFlow = MutableStateFlow(LibraryViewMode.TRACKS)
 
     override suspend fun setSortOrder(order: LibrarySortOrder) {
         sortOrderFlow.value = order
@@ -25,6 +27,10 @@ class FakePreferencesRepository : PreferencesRepository {
 
     override suspend fun setSortDirection(direction: SortDirection) {
         sortDirectionFlow.value = direction
+    }
+
+    override suspend fun setViewMode(mode: LibraryViewMode) {
+        viewModeFlow.value = mode
     }
 
     override suspend fun setFolderFilters(filters: List<FolderFilter>) {

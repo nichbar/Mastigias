@@ -12,6 +12,7 @@ import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.ThemeMode
 import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.ui.library.LibrarySortOrder
+import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -49,10 +50,12 @@ class PreferencesRepositoryImplTest {
     fun `default preferences return expected values`() = runBlocking {
         val sortOrder = repository.sortOrderFlow.first()
         val sortDirection = repository.sortDirectionFlow.first()
+        val viewMode = repository.viewModeFlow.first()
         val folderFilters = repository.folderFiltersFlow.first()
 
         assertEquals(LibrarySortOrder.TITLE, sortOrder)
         assertEquals(SortDirection.ASCENDING, sortDirection)
+        assertEquals(LibraryViewMode.TRACKS, viewMode)
         assertTrue(folderFilters.isEmpty())
     }
 
@@ -72,6 +75,15 @@ class PreferencesRepositoryImplTest {
 
         repository.setSortDirection(SortDirection.ASCENDING)
         assertEquals(SortDirection.ASCENDING, repository.sortDirectionFlow.first())
+    }
+
+    @Test
+    fun `setViewMode updates and persists view mode`() = runBlocking {
+        repository.setViewMode(LibraryViewMode.ALBUMS)
+        assertEquals(LibraryViewMode.ALBUMS, repository.viewModeFlow.first())
+
+        repository.setViewMode(LibraryViewMode.TRACKS)
+        assertEquals(LibraryViewMode.TRACKS, repository.viewModeFlow.first())
     }
 
     @Test

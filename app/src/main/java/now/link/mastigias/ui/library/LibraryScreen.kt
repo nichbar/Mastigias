@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
@@ -27,6 +28,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -76,6 +79,7 @@ fun LibraryScreen(
 
     var showSortDialog by remember { mutableStateOf(false) }
     var showFolderDialog by remember { mutableStateOf(false) }
+    var showViewModeMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { msg ->
@@ -148,11 +152,18 @@ fun LibraryScreen(
                 )
             }
 
+            val searchPlaceholder = if (uiState.viewMode == LibraryViewMode.ALBUMS) {
+                "Search albums, artists..."
+            } else {
+                "Search tracks, artists, albums..."
+            }
+
             // Search Bar
             MastigiasSearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = { viewModel.onSearchQueryChanged(it) },
-                onClearClick = { viewModel.onClearSearch() }
+                onClearClick = { viewModel.onClearSearch() },
+                placeholderText = searchPlaceholder
             )
 
             // Filter & Sort chips row
@@ -164,18 +175,69 @@ fun LibraryScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Untagged filter chip
-                FilterChip(
-                    selected = uiState.isUntaggedFilterActive,
-                    onClick = { viewModel.onToggleUntaggedFilter() },
-                    label = { Text("Untagged only") }
-                )
+                // View mode chip with DropdownMenu
+                Box {
+                    val viewLabel = when (uiState.viewMode) {
+                        LibraryViewMode.TRACKS -> "View: Tracks ▾"
+                        LibraryViewMode.ALBUMS -> "View: Albums ▾"
+                    }
+                    FilterChip(
+                        selected = true,
+                        onClick = { showViewModeMenu = true },
+                        label = { Text(viewLabel) }
+                    )
+
+                    DropdownMenu(
+                        expanded = showViewModeMenu,
+                        onDismissRequest = { showViewModeMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Tracks (flat list)") },
+                            onClick = {
+                                viewModel.onViewModeChanged(LibraryViewMode.TRACKS)
+                                showViewModeMenu = false
+                            },
+                            trailingIcon = {
+                                if (uiState.viewMode == LibraryViewMode.TRACKS) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Albums (accordion)") },
+                            onClick = {
+                                viewModel.onViewModeChanged(LibraryViewMode.ALBUMS)
+                                showViewModeMenu = false
+                            },
+                            trailingIcon = {
+                                if (uiState.viewMode == LibraryViewMode.ALBUMS) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Selected",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
 
                 // Current sort chip (clickable to open dialog)
-                val sortLabel = when (uiState.sortOrder) {
-                    LibrarySortOrder.TITLE -> "Title"
-                    LibrarySortOrder.ARTIST -> "Artist"
-                    LibrarySortOrder.ALBUM -> "Album (Accordion)"
+                val sortLabel = if (uiState.viewMode == LibraryViewMode.ALBUMS) {
+                    when (uiState.sortOrder) {
+                        LibrarySortOrder.ARTIST -> "Artist"
+                        else -> "Album Title"
+                    }
+                } else {
+                    when (uiState.sortOrder) {
+                        LibrarySortOrder.TITLE -> "Title"
+                        LibrarySortOrder.ARTIST -> "Artist"
+                        LibrarySortOrder.ALBUM -> "Album"
+                    }
                 }
                 val dirSymbol = if (uiState.sortDirection == SortDirection.ASCENDING) "↑" else "↓"
                 FilterChip(
@@ -192,6 +254,13 @@ fun LibraryScreen(
                         val count = folderFilters.size
                         Text(if (count > 0) "Folders ($count)" else "Folders")
                     }
+                )
+
+                // Untagged filter chip
+                FilterChip(
+                    selected = uiState.isUntaggedFilterActive,
+                    onClick = { viewModel.onToggleUntaggedFilter() },
+                    label = { Text("Untagged only") }
                 )
             }
 
@@ -273,6 +342,7 @@ fun LibraryScreen(
         SortDialog(
             currentOrder = uiState.sortOrder,
             currentDirection = uiState.sortDirection,
+            viewMode = uiState.viewMode,
             onApply = { order, direction ->
                 viewModel.onSortOrderChanged(order)
                 viewModel.onSortDirectionChanged(direction)

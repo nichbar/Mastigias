@@ -7,53 +7,51 @@ import org.junit.Test
 class LibraryUiStateTest {
 
     @Test
-    fun `isAccordionView is true only when sort is ALBUM and no search or untagged filter`() {
-        val accordionState = LibraryUiState(
-            sortOrder = LibrarySortOrder.ALBUM,
-            searchQuery = "",
-            isUntaggedFilterActive = false
-        )
-        assertTrue(accordionState.isAccordionView)
-
-        val titleState = LibraryUiState(
+    fun `isAccordionView is true when viewMode is ALBUMS regardless of search query or sort`() {
+        val albumModeState = LibraryUiState(
+            viewMode = LibraryViewMode.ALBUMS,
             sortOrder = LibrarySortOrder.TITLE,
             searchQuery = "",
             isUntaggedFilterActive = false
         )
-        assertFalse(titleState.isAccordionView)
+        assertTrue(albumModeState.isAccordionView)
 
-        val artistState = LibraryUiState(
-            sortOrder = LibrarySortOrder.ARTIST,
+        val albumModeWithSearch = LibraryUiState(
+            viewMode = LibraryViewMode.ALBUMS,
+            sortOrder = LibrarySortOrder.TITLE,
+            searchQuery = "Beatles",
+            isUntaggedFilterActive = false
+        )
+        assertTrue(albumModeWithSearch.isAccordionView)
+
+        val tracksModeState = LibraryUiState(
+            viewMode = LibraryViewMode.TRACKS,
+            sortOrder = LibrarySortOrder.ALBUM,
             searchQuery = "",
             isUntaggedFilterActive = false
         )
-        assertFalse(artistState.isAccordionView)
+        assertFalse(tracksModeState.isAccordionView)
 
-        val searchState = LibraryUiState(
+        val tracksModeWithSearch = LibraryUiState(
+            viewMode = LibraryViewMode.TRACKS,
             sortOrder = LibrarySortOrder.ALBUM,
             searchQuery = "Beatles",
             isUntaggedFilterActive = false
         )
-        assertFalse(searchState.isAccordionView)
-
-        val untaggedState = LibraryUiState(
-            sortOrder = LibrarySortOrder.ALBUM,
-            searchQuery = "",
-            isUntaggedFilterActive = true
-        )
-        assertFalse(untaggedState.isAccordionView)
+        assertFalse(tracksModeWithSearch.isAccordionView)
     }
 
     @Test
     fun `isEmpty evaluates correctly based on isAccordionView`() {
-        // Flat view with empty tracks
+        // Flat tracks view with empty tracks
         val emptyFlatState = LibraryUiState(
+            viewMode = LibraryViewMode.TRACKS,
             sortOrder = LibrarySortOrder.TITLE,
             tracks = emptyList()
         )
         assertTrue(emptyFlatState.isEmpty)
 
-        // Flat view with non-empty tracks
+        // Flat tracks view with non-empty tracks
         val sampleTrack = now.link.mastigias.domain.model.Track(
             id = 1L,
             path = "/storage/emulated/0/Music/test.mp3",
@@ -67,14 +65,15 @@ class LibraryUiStateTest {
             dateModified = 1000L
         )
         val populatedFlatState = LibraryUiState(
+            viewMode = LibraryViewMode.TRACKS,
             sortOrder = LibrarySortOrder.TITLE,
             tracks = listOf(sampleTrack)
         )
         assertFalse(populatedFlatState.isEmpty)
 
-        // Accordion view with empty albums
+        // Accordion albums view with empty albums
         val emptyAccordionState = LibraryUiState(
-            sortOrder = LibrarySortOrder.ALBUM,
+            viewMode = LibraryViewMode.ALBUMS,
             searchQuery = "",
             isUntaggedFilterActive = false,
             albums = emptyList(),
@@ -82,7 +81,7 @@ class LibraryUiStateTest {
         )
         assertTrue(emptyAccordionState.isEmpty)
 
-        // Accordion view with non-empty albums
+        // Accordion albums view with non-empty albums
         val sampleAlbum = now.link.mastigias.domain.model.Album(
             title = "Album",
             artist = "Artist",
@@ -90,7 +89,7 @@ class LibraryUiStateTest {
             coverTrackId = 1L
         )
         val populatedAccordionState = LibraryUiState(
-            sortOrder = LibrarySortOrder.ALBUM,
+            viewMode = LibraryViewMode.ALBUMS,
             searchQuery = "",
             isUntaggedFilterActive = false,
             albums = listOf(sampleAlbum)

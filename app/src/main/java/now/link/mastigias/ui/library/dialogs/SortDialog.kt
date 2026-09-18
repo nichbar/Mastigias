@@ -23,24 +23,38 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import now.link.mastigias.ui.library.LibrarySortOrder
+import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 
 @Composable
 fun SortDialog(
     currentOrder: LibrarySortOrder,
     currentDirection: SortDirection,
+    viewMode: LibraryViewMode = LibraryViewMode.TRACKS,
     onApply: (LibrarySortOrder, SortDirection) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedOrder by remember { mutableStateOf(currentOrder) }
+    val initialOrder = if (viewMode == LibraryViewMode.ALBUMS && currentOrder == LibrarySortOrder.ALBUM) {
+        LibrarySortOrder.TITLE
+    } else {
+        currentOrder
+    }
+    var selectedOrder by remember { mutableStateOf(initialOrder) }
     var selectedDirection by remember { mutableStateOf(currentDirection) }
+
+    val dialogTitle = if (viewMode == LibraryViewMode.ALBUMS) "Sort Albums" else "Sort Tracks"
+    val availableOrders = if (viewMode == LibraryViewMode.ALBUMS) {
+        listOf(LibrarySortOrder.TITLE, LibrarySortOrder.ARTIST)
+    } else {
+        listOf(LibrarySortOrder.TITLE, LibrarySortOrder.ARTIST, LibrarySortOrder.ALBUM)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Sort Tracks",
+                text = dialogTitle,
                 style = MaterialTheme.typography.titleLarge
             )
         },
@@ -53,11 +67,19 @@ fun SortDialog(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                LibrarySortOrder.entries.forEach { order ->
-                    val label = when (order) {
-                        LibrarySortOrder.TITLE -> "Title"
-                        LibrarySortOrder.ARTIST -> "Artist"
-                        LibrarySortOrder.ALBUM -> "Album (Accordion)"
+                availableOrders.forEach { order ->
+                    val label = if (viewMode == LibraryViewMode.ALBUMS) {
+                        when (order) {
+                            LibrarySortOrder.TITLE -> "Album Title"
+                            LibrarySortOrder.ARTIST -> "Artist"
+                            LibrarySortOrder.ALBUM -> "Album Title"
+                        }
+                    } else {
+                        when (order) {
+                            LibrarySortOrder.TITLE -> "Title"
+                            LibrarySortOrder.ARTIST -> "Artist"
+                            LibrarySortOrder.ALBUM -> "Album"
+                        }
                     }
                     Row(
                         modifier = Modifier

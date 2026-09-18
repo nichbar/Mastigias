@@ -7,6 +7,7 @@ import now.link.mastigias.domain.model.Album
 import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.MusicRepository
 import now.link.mastigias.domain.repository.PreferencesRepository
+import now.link.mastigias.ui.library.LibrarySortOrder
 import now.link.mastigias.ui.library.SortDirection
 import java.util.Locale
 import javax.inject.Inject
@@ -17,15 +18,30 @@ class GetAlbumsUseCase @Inject constructor(
 ) {
     operator fun invoke(
         query: String = "",
+        untaggedOnly: Boolean = false,
+        sortOrder: LibrarySortOrder? = null,
         sortDirection: SortDirection? = null,
         folderFilters: List<FolderFilter>? = null
     ): Flow<List<Album>> {
         val albumsFlow = musicRepository.observeAlbums()
+        val sortOrderFlow = sortOrder?.let { flowOf(it) } ?: preferencesRepository.sortOrderFlow
         val sortDirectionFlow = sortDirection?.let { flowOf(it) } ?: preferencesRepository.sortDirectionFlow
         val filtersFlow = folderFilters?.let { flowOf(it) } ?: preferencesRepository.folderFiltersFlow
 
-        return combine(albumsFlow, sortDirectionFlow, filtersFlow) { albums, direction, filters ->
+        return combine(albumsFlow, sortOrderFlow, sortDirectionFlow, filtersFlow) { albums, order, direction, filters ->
             var result = albums
+
+            if (untaggedOnly) {
+                result = result.mapNotNull { album ->
+                    val untaggedTracks = album.tracks.filter { !it.isTagged }
+                    if (untaggedTracks.isEmpty()) null
+                    else album.copy(
+                        tracks = untaggedTracks,
+                        coverTrackId = untaggedTracks.firstOrNull { it.hasArtwork == true }?.id
+                            ?: untaggedTracks.firstOrNull()?.id
+                    )
+                }
+            }
 
             if (filters.isNotEmpty()) {
                 result = result.mapNotNull { album ->
@@ -50,8 +66,12 @@ class GetAlbumsUseCase @Inject constructor(
                 }
             }
 
-            val comparator = compareBy<Album> { it.title.lowercase(Locale.ROOT) }
-                .thenBy { it.artist.lowercase(Locale.ROOT) }
+            val comparator = when (order) {
+                LibrarySortOrder.ARTIST -> compareBy<Album> { it.artist.lowercase(Locale.ROOT) }
+                    .thenBy { it.title.lowercase(Locale.ROOT) }
+                else -> compareBy<Album> { it.title.lowercase(Locale.ROOT) }
+                    .thenBy { it.artist.lowercase(Locale.ROOT) }
+            }
             val finalComparator = if (direction == SortDirection.DESCENDING) comparator.reversed() else comparator
             result.sortedWith(finalComparator)
         }

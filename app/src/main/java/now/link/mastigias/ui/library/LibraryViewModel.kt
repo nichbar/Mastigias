@@ -29,6 +29,7 @@ import javax.inject.Inject
 private data class FilterAndSortParams(
     val query: String,
     val untaggedOnly: Boolean,
+    val viewMode: LibraryViewMode,
     val sortOrder: LibrarySortOrder,
     val sortDirection: SortDirection
 )
@@ -59,18 +60,21 @@ class LibraryViewModel @Inject constructor(
     private val filterAndSortParamsFlow: Flow<FilterAndSortParams> = combine(
         _searchQuery,
         _isUntaggedFilterActive,
+        preferencesRepository.viewModeFlow,
         preferencesRepository.sortOrderFlow,
         preferencesRepository.sortDirectionFlow
-    ) { query, untagged, order, direction ->
-        FilterAndSortParams(query, untagged, order, direction)
+    ) { query, untagged, viewMode, order, direction ->
+        FilterAndSortParams(query, untagged, viewMode, order, direction)
     }
 
     private val contentFlow: Flow<Pair<List<Track>, List<Album>>> = filterAndSortParamsFlow
         .debounce { params -> if (params.query.isBlank()) 0L else 200L }
         .flatMapLatest { params ->
-            if (params.sortOrder == LibrarySortOrder.ALBUM && params.query.isBlank() && !params.untaggedOnly) {
+            if (params.viewMode == LibraryViewMode.ALBUMS) {
                 getAlbumsUseCase(
                     query = params.query,
+                    untaggedOnly = params.untaggedOnly,
+                    sortOrder = params.sortOrder,
                     sortDirection = params.sortDirection
                 ).map { albums -> emptyList<Track>() to albums }
             } else {
@@ -99,6 +103,7 @@ class LibraryViewModel @Inject constructor(
             tracks = tracks,
             albums = albums,
             searchQuery = filterParams.query,
+            viewMode = filterParams.viewMode,
             sortOrder = filterParams.sortOrder,
             sortDirection = filterParams.sortDirection,
             isUntaggedFilterActive = filterParams.untaggedOnly,
@@ -122,6 +127,12 @@ class LibraryViewModel @Inject constructor(
 
     fun onClearSearch() {
         _searchQuery.value = ""
+    }
+
+    fun onViewModeChanged(mode: LibraryViewMode) {
+        viewModelScope.launch {
+            preferencesRepository.setViewMode(mode)
+        }
     }
 
     fun onSortOrderChanged(order: LibrarySortOrder) {

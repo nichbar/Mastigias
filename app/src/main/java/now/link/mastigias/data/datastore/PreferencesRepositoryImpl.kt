@@ -20,6 +20,7 @@ import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.PreferencesRepository
 import now.link.mastigias.domain.repository.ThemeMode
 import now.link.mastigias.ui.library.LibrarySortOrder
+import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 import java.io.IOException
 import javax.inject.Inject
@@ -101,6 +102,27 @@ class PreferencesRepositoryImpl @Inject constructor(
             }
         }
 
+    override val viewModeFlow: Flow<LibraryViewMode> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { prefs ->
+            val value = prefs[KEY_VIEW_MODE]
+            if (value != null) {
+                try {
+                    LibraryViewMode.valueOf(value)
+                } catch (e: IllegalArgumentException) {
+                    LibraryViewMode.TRACKS
+                }
+            } else {
+                LibraryViewMode.TRACKS
+            }
+        }
+
     override val folderFiltersFlow: Flow<List<FolderFilter>> = dataStore.data
         .catch { exception ->
             if (exception is IOException) {
@@ -132,6 +154,12 @@ class PreferencesRepositoryImpl @Inject constructor(
     override suspend fun setSortDirection(direction: SortDirection) {
         dataStore.edit { prefs ->
             prefs[KEY_SORT_DIRECTION] = direction.name
+        }
+    }
+
+    override suspend fun setViewMode(mode: LibraryViewMode) {
+        dataStore.edit { prefs ->
+            prefs[KEY_VIEW_MODE] = mode.name
         }
     }
 
@@ -192,6 +220,7 @@ class PreferencesRepositoryImpl @Inject constructor(
     companion object {
         val KEY_SORT_ORDER = stringPreferencesKey("sort_order")
         val KEY_SORT_DIRECTION = stringPreferencesKey("sort_direction")
+        val KEY_VIEW_MODE = stringPreferencesKey("view_mode")
         val KEY_FOLDER_FILTERS = stringPreferencesKey("folder_filters")
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
         val KEY_LOGGING_ENABLED = booleanPreferencesKey("logging_enabled")
