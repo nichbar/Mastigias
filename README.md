@@ -8,31 +8,35 @@
 <h1 align="center">Mastigias</h1>
 
 <p align="center">
-  A high-performance, native Android music tag editor built with Modern Android Architecture and TagLib C++.
+  A simple native Android music tag editor built with TagLib C++ via JNI.
 </p>
+
+Some tracks on my Android device used the `album-artist` field instead of `artist`, which prevented my music player from recognizing the actual artist. I asked an LLM to recommend an open-source Android app that could edit track metadata; however, some apps could only edit one track at a time (and I had an entire album to edit), while others simply failed to load the track list. Consequently, I decided to write a simple music tag editor that just works and supports batch editing.
 
 <p align="center">
   <a href="https://github.com/nichbar/Mastigias/releases/latest"><img src="https://img.shields.io/github/v/release/nichbar/Mastigias?logo=github&label=Release" alt="Latest Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License"></a>
 </p>
 
-Mastigias is a high-performance, native Android music tag editor built with Modern Android Architecture (MAD), Jetpack Compose, Material 3 Expressive, and TagLib C++ via JNI.
-
 ## Screenshots
 
-| Library Screen | Tag Editor |
+| Library | Tag Editor |
 |:---:|:---:|
-| <img src="docs/screenshots/library.jpg" width="320" alt="Library Screen" /> | <img src="docs/screenshots/editor.png" width="320" alt="Tag Editor Screen" /> |
+| <img src="docs/screenshots/library.jpg" width="320" alt="Library" /> | <img src="docs/screenshots/editor.png" width="320" alt="Tag Editor" /> |
 
 ## Features
 
 - **High-Performance Native Engine**: C++ TagLib 1.13.1 integrated via JNI supporting MP3, FLAC, M4A/MP4, OGG/Opus/Vorbis, WAV, AIFF, and WMA.
-- **8-Step Scoped Storage Safe Write Protocol**: Staged temporary work files and atomic updates to guarantee audio file integrity and avoid corruption.
-- **Modern Jetpack Compose UI**: Clean flat and album accordion views, expressive Material 3 styling, and full dark/light theme support.
 - **Batch & Single File Editing**: Edit individual tracks or batch-edit common metadata across entire albums simultaneously.
 - **Embedded Artwork**: Embed and replace album art with two-pass bounds decoding and downsampling via Coil 3.
 - **Lyrics Integration**: Multiline lyrics editor with external SongSync integration support.
-- **In-App Diagnostics**: Fast, in-memory circular log viewer for monitoring media scanning and storage operations.
+
+## Download
+
+Download the latest APK from [GitHub Releases](https://github.com/nichbar/Mastigias/releases/latest):
+
+- **`Mastigias.<tag>.apk`** (`arm64-v8a`): Recommended for most modern Android devices (smaller file size).
+- **`Mastigias.<tag>-universal.apk`** (Universal): Includes native libraries for all architectures (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`) for maximum compatibility.
 
 ## Architecture
 
