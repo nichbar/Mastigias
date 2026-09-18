@@ -447,6 +447,39 @@ fun SettingsScreen(
                         }
                     }
                 )
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            text = "License",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    supportingContent = {
+                        Text(
+                            text = "GNU AGPL v3.0 (AGPL-3.0-only)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Open in browser",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        val browserIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://www.gnu.org/licenses/agpl-3.0.html")
+                        )
+                        try {
+                            context.startActivity(browserIntent)
+                        } catch (_: Exception) {
+                            // Fallback if browser is not installed
+                        }
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
