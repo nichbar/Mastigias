@@ -1,7 +1,19 @@
-# Mastigias
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="art/mastigias_dark.svg">
+    <img alt="Mastigias Logo" src="art/mastigias_light.svg" width="160">
+  </picture>
+</p>
+
+<h1 align="center">Mastigias</h1>
 
 <p align="center">
-  <img src="art/mastigias.svg" alt="Mastigias Logo" width="128" height="128" />
+  A high-performance, native Android music tag editor built with Modern Android Architecture and TagLib C++.
+</p>
+
+<p align="center">
+  <a href="https://github.com/nichbar/Mastigias/releases/latest"><img src="https://img.shields.io/github/v/release/nichbar/Mastigias?logo=github&label=Release" alt="Latest Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License"></a>
 </p>
 
 Mastigias is a high-performance, native Android music tag editor built with Modern Android Architecture (MAD), Jetpack Compose, Material 3 Expressive, and TagLib C++ via JNI.
@@ -10,7 +22,7 @@ Mastigias is a high-performance, native Android music tag editor built with Mode
 
 | Library Screen | Tag Editor |
 |:---:|:---:|
-| <img src="docs/screenshots/library.png" width="320" alt="Library Screen" /> | <img src="docs/screenshots/editor.png" width="320" alt="Tag Editor Screen" /> |
+| <img src="docs/screenshots/library.jpg" width="320" alt="Library Screen" /> | <img src="docs/screenshots/editor.png" width="320" alt="Tag Editor Screen" /> |
 
 ## Features
 
