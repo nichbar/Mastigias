@@ -7,13 +7,17 @@ import kotlinx.coroutines.launch
 import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.engine.TagEngine
+import now.link.mastigias.domain.logging.NoOpAppLogger
 import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.model.AudioMetadata
+import now.link.mastigias.domain.model.LyricsCandidate
 import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.domain.model.TagPatch
 import now.link.mastigias.domain.model.Track
+import now.link.mastigias.domain.repository.LyricsRepository
 import now.link.mastigias.domain.usecase.BatchWriteMetadataUseCase
 import now.link.mastigias.domain.usecase.FakeMusicRepository
+import now.link.mastigias.domain.usecase.FetchLyricsUseCase
 import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
 import now.link.mastigias.domain.usecase.ReadBatchMetadataUseCase
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
@@ -41,6 +45,8 @@ class EditorViewModelTest {
     private lateinit var writeTrackMetadataUseCase: WriteTrackMetadataUseCase
     private lateinit var batchWriteMetadataUseCase: BatchWriteMetadataUseCase
     private lateinit var getTracksByAlbumUseCase: GetTracksByAlbumUseCase
+    private lateinit var fetchLyricsUseCase: FetchLyricsUseCase
+    private lateinit var fakeLyricsRepository: FakeTestLyricsRepo
     private lateinit var mediaStoreDataSource: MediaStoreDataSource
 
     private val track1 = Track(
@@ -110,6 +116,8 @@ class EditorViewModelTest {
         writeTrackMetadataUseCase = WriteTrackMetadataUseCase(musicRepository)
         batchWriteMetadataUseCase = BatchWriteMetadataUseCase(musicRepository)
         getTracksByAlbumUseCase = GetTracksByAlbumUseCase(musicRepository)
+        fakeLyricsRepository = FakeTestLyricsRepo()
+        fetchLyricsUseCase = FetchLyricsUseCase(fakeLyricsRepository, NoOpAppLogger)
         mediaStoreDataSource = MediaStoreDataSource()
     }
 
@@ -121,6 +129,7 @@ class EditorViewModelTest {
             writeTrackMetadataUseCase = writeTrackMetadataUseCase,
             batchWriteMetadataUseCase = batchWriteMetadataUseCase,
             getTracksByAlbumUseCase = getTracksByAlbumUseCase,
+            fetchLyricsUseCase = fetchLyricsUseCase,
             mediaStoreDataSource = mediaStoreDataSource,
             dispatchers = testDispatchers
         )
@@ -277,5 +286,80 @@ class EditorViewModelTest {
         assertEquals("All 2 tracks updated successfully", toastEvents.first().message)
 
         job.cancel()
+    }
+
+    @Test
+    fun `fetchLyricsCandidates populates candidates in lyricsSearchState`() = runBlocking {
+        val viewModel = createViewModel()
+        viewModel.initialize(longArrayOf(1L))
+
+        fakeLyricsRepository.candidates = listOf(
+            LyricsCandidate(
+                id = 99L,
+                trackName = "Track 1",
+                artistName = "Common Artist",
+                durationSeconds = 180.0,
+                syncedLyrics = "[00:01.00] Line 1"
+            )
+        )
+
+        viewModel.fetchLyricsCandidates()
+
+        val searchState = viewModel.uiState.value.lyricsSearchState
+        assertFalse(searchState.isSearching)
+        assertTrue(searchState.hasSearched)
+        assertNull(searchState.error)
+        assertEquals(1, searchState.candidates.size)
+        assertEquals(99L, searchState.candidates[0].id)
+    }
+
+    @Test
+    fun `fetchLyricsCandidates with blank title sets error in state`() = runBlocking {
+        val viewModel = createViewModel()
+        // Not initialized, so fields are empty
+        viewModel.fetchLyricsCandidates(customTitle = "   ", customArtist = "Some Artist")
+
+        val searchState = viewModel.uiState.value.lyricsSearchState
+        assertFalse(searchState.isSearching)
+        assertTrue(searchState.hasSearched)
+        assertNotNull(searchState.error)
+        assertTrue(searchState.candidates.isEmpty())
+    }
+
+    @Test
+    fun `resetLyricsSearch clears search state`() = runBlocking {
+        val viewModel = createViewModel()
+        viewModel.initialize(longArrayOf(1L))
+
+        fakeLyricsRepository.candidates = listOf(
+            LyricsCandidate(
+                id = 99L,
+                trackName = "Track 1",
+                artistName = "Common Artist",
+                durationSeconds = 180.0
+            )
+        )
+
+        viewModel.fetchLyricsCandidates()
+        assertEquals(1, viewModel.uiState.value.lyricsSearchState.candidates.size)
+
+        viewModel.resetLyricsSearch()
+        val resetState = viewModel.uiState.value.lyricsSearchState
+        assertFalse(resetState.isSearching)
+        assertFalse(resetState.hasSearched)
+        assertTrue(resetState.candidates.isEmpty())
+        assertNull(resetState.error)
+    }
+}
+
+private class FakeTestLyricsRepo : LyricsRepository {
+    var candidates: List<LyricsCandidate> = emptyList()
+
+    override suspend fun searchLyrics(
+        trackName: String,
+        artistName: String?,
+        albumName: String?
+    ): Result<List<LyricsCandidate>> {
+        return Result.success(candidates)
     }
 }

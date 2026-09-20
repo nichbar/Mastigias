@@ -58,6 +58,7 @@ import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.ui.common.ConfirmationDialog
 import now.link.mastigias.ui.editor.dialogs.AddFieldDialog
 import now.link.mastigias.ui.editor.dialogs.LyricsBottomSheet
+import now.link.mastigias.ui.editor.dialogs.LyricsCandidateDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,8 +76,16 @@ fun EditorScreen(
     var pendingBatchTrackIds by remember { mutableStateOf<LongArray?>(null) }
     var showAddFieldDialog by remember { mutableStateOf(false) }
     var showLyricsSheet by remember { mutableStateOf(false) }
+    var showLyricsCandidateDialog by remember { mutableStateOf(false) }
+    var editedLyricsText by remember { mutableStateOf("") }
     var hasNavigatedBack by remember { mutableStateOf(false) }
     val lyricsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    LaunchedEffect(showLyricsSheet) {
+        if (showLyricsSheet) {
+            editedLyricsText = uiState.fields[TagField.LYRICS]?.value ?: ""
+        }
+    }
 
     val safeNavigateBack: () -> Unit = {
         if (!hasNavigatedBack) {
@@ -307,15 +316,19 @@ fun EditorScreen(
 
     // Lyrics Bottom Sheet
     if (showLyricsSheet) {
-        val currentLyrics = uiState.fields[TagField.LYRICS]?.value ?: ""
         val title = uiState.fields[TagField.TITLE]?.value ?: ""
         val artist = uiState.fields[TagField.ARTIST]?.value ?: ""
 
         LyricsBottomSheet(
-            initialLyrics = currentLyrics,
+            lyricsText = editedLyricsText,
+            onLyricsChange = { editedLyricsText = it },
             trackTitle = title,
             artistName = artist,
             sheetState = lyricsSheetState,
+            onFetchLyricsClick = {
+                viewModel.fetchLyricsCandidates()
+                showLyricsCandidateDialog = true
+            },
             onSaveLyrics = { newLyrics ->
                 viewModel.updateField(TagField.LYRICS, newLyrics)
             },
@@ -324,6 +337,25 @@ fun EditorScreen(
                     lyricsSheetState.hide()
                     showLyricsSheet = false
                 }
+            }
+        )
+    }
+
+    // Lyrics Candidate Dialog (LRCLIB)
+    if (showLyricsCandidateDialog) {
+        LyricsCandidateDialog(
+            searchState = uiState.lyricsSearchState,
+            targetDurationMs = uiState.initialMetadata?.durationMs,
+            onSearch = { customTitle, customArtist ->
+                viewModel.fetchLyricsCandidates(customTitle, customArtist)
+            },
+            onCandidateSelected = { chosenLyrics ->
+                editedLyricsText = chosenLyrics
+                showLyricsCandidateDialog = false
+            },
+            onDismiss = {
+                showLyricsCandidateDialog = false
+                viewModel.resetLyricsSearch()
             }
         )
     }

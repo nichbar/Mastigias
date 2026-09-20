@@ -3,6 +3,7 @@ package now.link.mastigias.ui.editor
 import android.content.IntentSender
 import now.link.mastigias.domain.model.ArtworkData
 import now.link.mastigias.domain.model.AudioMetadata
+import now.link.mastigias.domain.model.LyricsCandidate
 import now.link.mastigias.domain.model.TagField
 
 sealed interface EditorMode {
@@ -18,6 +19,15 @@ data class FieldEditState(
     val initialValue: String? = null
 )
 
+data class LyricsSearchUiState(
+    val isSearching: Boolean = false,
+    val queryTitle: String = "",
+    val queryArtist: String = "",
+    val candidates: List<LyricsCandidate> = emptyList(),
+    val error: String? = null,
+    val hasSearched: Boolean = false
+)
+
 data class EditorUiState(
     val mode: EditorMode,
     val initialMetadata: AudioMetadata? = null,
@@ -29,7 +39,8 @@ data class EditorUiState(
     val isSaving: Boolean = false,
     val saveProgress: Float = 0f,
     val pendingConsentIntent: IntentSender? = null,
-    val error: String? = null
+    val error: String? = null,
+    val lyricsSearchState: LyricsSearchUiState = LyricsSearchUiState()
 ) {
     val isDirty: Boolean
         get() = isArtworkDirty || removeArtwork || fields.values.any { it.isDirty }

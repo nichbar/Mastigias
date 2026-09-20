@@ -5,7 +5,9 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import now.link.mastigias.data.datastore.PreferencesRepositoryImpl
+import now.link.mastigias.data.lyrics.repository.LrcLibRepositoryImpl
 import now.link.mastigias.data.media.MusicRepositoryImpl
+import now.link.mastigias.domain.repository.LyricsRepository
 import now.link.mastigias.domain.repository.MusicRepository
 import now.link.mastigias.domain.repository.PreferencesRepository
 import javax.inject.Singleton
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindPreferencesRepository(
         preferencesRepositoryImpl: PreferencesRepositoryImpl
     ): PreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLyricsRepository(
+        lrcLibRepositoryImpl: LrcLibRepositoryImpl
+    ): LyricsRepository
 }

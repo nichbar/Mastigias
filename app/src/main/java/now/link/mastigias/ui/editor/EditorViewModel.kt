@@ -20,6 +20,7 @@ import now.link.mastigias.domain.model.TagCategory
 import now.link.mastigias.domain.model.TagField
 import now.link.mastigias.domain.model.Track
 import now.link.mastigias.domain.usecase.BatchWriteMetadataUseCase
+import now.link.mastigias.domain.usecase.FetchLyricsUseCase
 import now.link.mastigias.domain.usecase.GetTracksByAlbumUseCase
 import now.link.mastigias.domain.usecase.ReadBatchMetadataUseCase
 import now.link.mastigias.domain.usecase.ReadTrackMetadataUseCase
@@ -35,6 +36,7 @@ class EditorViewModel @Inject constructor(
     private val writeTrackMetadataUseCase: WriteTrackMetadataUseCase,
     private val batchWriteMetadataUseCase: BatchWriteMetadataUseCase,
     private val getTracksByAlbumUseCase: GetTracksByAlbumUseCase,
+    private val fetchLyricsUseCase: FetchLyricsUseCase,
     private val mediaStoreDataSource: MediaStoreDataSource,
     private val dispatchers: AppDispatchers = AppDispatchers()
 ) : ViewModel() {
@@ -490,5 +492,93 @@ class EditorViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun fetchLyricsCandidates(customTitle: String? = null, customArtist: String? = null) {
+        val currentFields = _uiState.value.fields
+        val initialMetadata = _uiState.value.initialMetadata
+
+        val title = customTitle
+            ?: currentFields[TagField.TITLE]?.value?.takeIf { it.isNotBlank() }
+            ?: initialMetadata?.fields?.get(TagField.TITLE)
+            ?: ""
+
+        val artist = customArtist
+            ?: currentFields[TagField.ARTIST]?.value?.takeIf { it.isNotBlank() }
+            ?: initialMetadata?.fields?.get(TagField.ARTIST)
+
+        val album = currentFields[TagField.ALBUM]?.value?.takeIf { it.isNotBlank() }
+            ?: initialMetadata?.fields?.get(TagField.ALBUM)
+
+        val targetDurationMs = initialMetadata?.durationMs
+
+        if (title.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                lyricsSearchState = LyricsSearchUiState(
+                    isSearching = false,
+                    queryTitle = "",
+                    queryArtist = artist ?: "",
+                    candidates = emptyList(),
+                    error = "Track title is required to search lyrics",
+                    hasSearched = true
+                )
+            )
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(
+            lyricsSearchState = LyricsSearchUiState(
+                isSearching = true,
+                queryTitle = title,
+                queryArtist = artist ?: "",
+                candidates = emptyList(),
+                error = null,
+                hasSearched = false
+            )
+        )
+
+        viewModelScope.launch(dispatchers.io) {
+            LogManager.d(TAG, "Fetching lyrics candidates for '$title' by '$artist'")
+            val result = fetchLyricsUseCase(
+                trackName = title,
+                artistName = artist,
+                albumName = album,
+                targetDurationMs = targetDurationMs
+            )
+
+            if (result.isSuccess) {
+                val candidates = result.getOrDefault(emptyList())
+                LogManager.d(TAG, "Fetched ${candidates.size} lyrics candidate(s)")
+                _uiState.value = _uiState.value.copy(
+                    lyricsSearchState = LyricsSearchUiState(
+                        isSearching = false,
+                        queryTitle = title,
+                        queryArtist = artist ?: "",
+                        candidates = candidates,
+                        error = null,
+                        hasSearched = true
+                    )
+                )
+            } else {
+                val errorMsg = result.exceptionOrNull()?.message ?: "Failed to fetch lyrics"
+                LogManager.e(TAG, "Failed to fetch lyrics: $errorMsg")
+                _uiState.value = _uiState.value.copy(
+                    lyricsSearchState = LyricsSearchUiState(
+                        isSearching = false,
+                        queryTitle = title,
+                        queryArtist = artist ?: "",
+                        candidates = emptyList(),
+                        error = errorMsg,
+                        hasSearched = true
+                    )
+                )
+            }
+        }
+    }
+
+    fun resetLyricsSearch() {
+        _uiState.value = _uiState.value.copy(
+            lyricsSearchState = LyricsSearchUiState()
+        )
     }
 }

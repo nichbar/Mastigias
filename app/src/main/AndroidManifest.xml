@@ -22,6 +22,9 @@
     <!-- Access media location for preserving metadata tags containing location info -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
+    <!-- Internet permission for remote lyrics lookup (LRCLIB) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".MastigiasApp"
         android:allowBackup="true"

@@ -149,5 +149,7 @@ dependencies {
 
     implementation(libs.coil.compose)
 
+    implementation(libs.okhttp)
+
     testImplementation(libs.junit)
 }

@@ -1,6 +1,5 @@
 package now.link.mastigias.ui.editor.dialogs
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,29 +20,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LyricsBottomSheet(
-    initialLyrics: String,
+    lyricsText: String,
+    onLyricsChange: (String) -> Unit,
     trackTitle: String,
     artistName: String,
     sheetState: SheetState,
+    onFetchLyricsClick: () -> Unit,
     onSaveLyrics: (String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    var lyricsText by remember { mutableStateOf(initialLyrics) }
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -72,24 +65,16 @@ fun LyricsBottomSheet(
                     )
                 }
 
-                // SongSync / Share button
+                // Fetch Lyrics button
                 OutlinedButton(
-                    onClick = {
-                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, lyricsText.ifBlank { "$trackTitle $artistName" })
-                            putExtra(Intent.EXTRA_SUBJECT, "$trackTitle - $artistName")
-                        }
-                        val chooser = Intent.createChooser(shareIntent, "Find/Share lyrics via SongSync")
-                        context.startActivity(chooser)
-                    }
+                    onClick = onFetchLyricsClick
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Share,
+                        imageVector = Icons.Default.Search,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 4.dp)
                     )
-                    Text("SongSync")
+                    Text("Fetch Lyrics")
                 }
             }
 
@@ -97,7 +82,7 @@ fun LyricsBottomSheet(
 
             OutlinedTextField(
                 value = lyricsText,
-                onValueChange = { lyricsText = it },
+                onValueChange = onLyricsChange,
                 placeholder = { Text("Paste or type lyrics here...") },
                 modifier = Modifier
                     .fillMaxWidth()
