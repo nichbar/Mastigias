@@ -2,6 +2,7 @@ package now.link.mastigias.data.lyrics.remote
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
+import now.link.mastigias.BuildConfig
 import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.data.lyrics.model.LrcLibCandidateDto
 import okhttp3.Call
@@ -85,6 +86,6 @@ open class LrcLibClient @Inject constructor(
     companion object {
         private const val TAG = "LrcLibClient"
         private const val BASE_URL = "https://lrclib.net"
-        const val USER_AGENT = "Mastigias/1.0.0 (Android; https://github.com/nowlink/mastigias)"
+        val USER_AGENT = "Mastigias/${BuildConfig.VERSION_NAME} (Android; https://github.com/nowlink/mastigias)"
     }
 }

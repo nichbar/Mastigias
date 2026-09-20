@@ -61,6 +61,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import now.link.mastigias.BuildConfig
 import now.link.mastigias.R
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
@@ -416,7 +417,7 @@ fun SettingsScreen(
                     },
                     supportingContent = {
                         Text(
-                            text = "1.0.0",
+                            text = BuildConfig.VERSION_NAME,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
