@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,6 +52,8 @@ import now.link.mastigias.domain.model.Track
 @Composable
 fun AlbumAccordionItem(
     album: Album,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
     onTrackClick: (Track) -> Unit,
     onEditAlbumClick: (Album) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -62,7 +63,6 @@ fun AlbumAccordionItem(
     onToggleTrackSelect: (Track) -> Unit = {},
     onToggleAlbumSelect: (Album) -> Unit = {}
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
     val arrowRotation by animateFloatAsState(
         targetValue = if (isExpanded) 90f else -90f,
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
@@ -94,7 +94,7 @@ fun AlbumAccordionItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded }
+                    .clickable { onToggleExpand() }
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

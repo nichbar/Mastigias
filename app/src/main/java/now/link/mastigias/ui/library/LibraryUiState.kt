@@ -13,7 +13,8 @@ data class LibraryUiState(
     val isUntaggedFilterActive: Boolean = false,
     val isSyncing: Boolean = false,
     val errorMessage: String? = null,
-    val selectedTrackIds: Set<Long> = emptySet()
+    val selectedTrackIds: Set<Long> = emptySet(),
+    val expandedAlbumKeys: Set<String> = emptySet()
 ) {
     val isAccordionView: Boolean
         get() = viewMode == LibraryViewMode.ALBUMS

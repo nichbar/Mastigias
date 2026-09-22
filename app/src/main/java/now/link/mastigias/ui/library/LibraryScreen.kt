@@ -353,14 +353,13 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = uiState.albums,
-                                key = { album ->
-                                    val id = album.coverTrackId ?: album.tracks.firstOrNull()?.id ?: 0L
-                                    "${album.title}_${album.artist}_$id"
-                                },
+                                key = { album -> album.key },
                                 contentType = { "album_accordion" }
                             ) { album ->
                                 AlbumAccordionItem(
                                     album = album,
+                                    isExpanded = album.key in uiState.expandedAlbumKeys,
+                                    onToggleExpand = { viewModel.toggleAlbumExpanded(album.key) },
                                     onTrackClick = { track ->
                                         if (uiState.isSelectionMode) {
                                             viewModel.toggleTrackSelection(track.id)

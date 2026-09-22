@@ -61,6 +61,7 @@ class LibraryViewModel @Inject constructor(
     private val _isSyncing = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
     private val _selectedTrackIds = MutableStateFlow<Set<Long>>(emptySet())
+    private val _expandedAlbumKeys = MutableStateFlow<Set<String>>(emptySet())
 
     private val trackCache = ConcurrentHashMap<Long, Track>()
 
@@ -117,8 +118,9 @@ class LibraryViewModel @Inject constructor(
         contentFlow,
         filterAndSortParamsFlow,
         syncStatusFlow,
-        _selectedTrackIds
-    ) { (tracks, albums), filterParams, status, selectedTrackIds ->
+        _selectedTrackIds,
+        _expandedAlbumKeys
+    ) { (tracks, albums), filterParams, status, selectedTrackIds, expandedAlbumKeys ->
         LibraryUiState(
             tracks = tracks,
             albums = albums,
@@ -129,7 +131,8 @@ class LibraryViewModel @Inject constructor(
             isUntaggedFilterActive = filterParams.untaggedOnly,
             isSyncing = status.isSyncing,
             errorMessage = status.errorMessage,
-            selectedTrackIds = selectedTrackIds
+            selectedTrackIds = selectedTrackIds,
+            expandedAlbumKeys = expandedAlbumKeys
         )
     }.stateIn(
         scope = viewModelScope + dispatchers.main,
@@ -204,6 +207,23 @@ class LibraryViewModel @Inject constructor(
         } else {
             _selectedTrackIds.value = current + albumTrackIds
         }
+    }
+
+    fun toggleAlbumExpanded(albumKey: String) {
+        val current = _expandedAlbumKeys.value
+        _expandedAlbumKeys.value = if (current.contains(albumKey)) {
+            current - albumKey
+        } else {
+            current + albumKey
+        }
+    }
+
+    fun toggleAlbumExpanded(album: Album) {
+        toggleAlbumExpanded(album.key)
+    }
+
+    fun collapseAllAlbums() {
+        _expandedAlbumKeys.value = emptySet()
     }
 
     fun clearSelection() {

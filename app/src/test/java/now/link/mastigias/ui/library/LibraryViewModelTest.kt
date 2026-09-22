@@ -308,4 +308,46 @@ class LibraryViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun `toggleAlbumExpanded toggles album expansion by key and album object`() = runBlocking {
+        val viewModel = createViewModel()
+        val job = launch(Dispatchers.Unconfined) { viewModel.uiState.collect {} }
+
+        val album = Album(
+            title = "Album 1",
+            artist = "Artist A",
+            tracks = listOf(track1, track2),
+            coverTrackId = 1L
+        )
+        val albumKey = album.key
+        assertEquals("Album 1_Artist A_1", albumKey)
+
+        assertEquals(emptySet<String>(), viewModel.uiState.value.expandedAlbumKeys)
+
+        // Expand via key
+        viewModel.toggleAlbumExpanded(albumKey)
+        assertEquals(setOf(albumKey), viewModel.uiState.value.expandedAlbumKeys)
+
+        // Collapse via Album overload
+        viewModel.toggleAlbumExpanded(album)
+        assertEquals(emptySet<String>(), viewModel.uiState.value.expandedAlbumKeys)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `collapseAllAlbums clears all expanded albums`() = runBlocking {
+        val viewModel = createViewModel()
+        val job = launch(Dispatchers.Unconfined) { viewModel.uiState.collect {} }
+
+        viewModel.toggleAlbumExpanded("key_1")
+        viewModel.toggleAlbumExpanded("key_2")
+        assertEquals(setOf("key_1", "key_2"), viewModel.uiState.value.expandedAlbumKeys)
+
+        viewModel.collapseAllAlbums()
+        assertEquals(emptySet<String>(), viewModel.uiState.value.expandedAlbumKeys)
+
+        job.cancel()
+    }
 }
