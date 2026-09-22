@@ -189,7 +189,8 @@ class MusicRepositoryImpl @Inject constructor(
                     isTagged = isTagged,
                     dateModified = item.dateModified,
                     mimeType = item.mimeType,
-                    sizeBytes = item.sizeBytes
+                    sizeBytes = item.sizeBytes,
+                    dateAdded = item.dateAdded
                 )
             }
 

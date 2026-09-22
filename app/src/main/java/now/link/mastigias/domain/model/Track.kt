@@ -10,8 +10,12 @@ data class Track(
     val durationMs: Long,
     val hasArtwork: Boolean?,
     val isTagged: Boolean,
-    val dateModified: Long
+    val dateModified: Long,
+    val dateAdded: Long = 0L
 ) {
+    val dateCreated: Long
+        get() = if (dateAdded > 0L) dateAdded else dateModified
+
     companion object {
         const val UNKNOWN_VALUE = "<unknown>"
         const val UNKNOWN_ARTIST = "<Unknown Artist>"

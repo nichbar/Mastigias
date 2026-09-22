@@ -35,20 +35,24 @@ fun SortDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val initialOrder = if (viewMode == LibraryViewMode.ALBUMS && currentOrder == LibrarySortOrder.ALBUM) {
-        LibrarySortOrder.TITLE
+    val dialogTitle = if (viewMode == LibraryViewMode.ALBUMS) "Sort Albums" else "Sort Tracks"
+    val availableOrders = if (viewMode == LibraryViewMode.ALBUMS) {
+        listOf(LibrarySortOrder.TITLE, LibrarySortOrder.ARTIST)
+    } else {
+        listOf(
+            LibrarySortOrder.TITLE,
+            LibrarySortOrder.DATE_MODIFIED,
+            LibrarySortOrder.DATE_CREATED
+        )
+    }
+
+    val initialOrder = if (currentOrder !in availableOrders) {
+        availableOrders.first()
     } else {
         currentOrder
     }
     var selectedOrder by remember { mutableStateOf(initialOrder) }
     var selectedDirection by remember { mutableStateOf(currentDirection) }
-
-    val dialogTitle = if (viewMode == LibraryViewMode.ALBUMS) "Sort Albums" else "Sort Tracks"
-    val availableOrders = if (viewMode == LibraryViewMode.ALBUMS) {
-        listOf(LibrarySortOrder.TITLE, LibrarySortOrder.ARTIST)
-    } else {
-        listOf(LibrarySortOrder.TITLE, LibrarySortOrder.ARTIST, LibrarySortOrder.ALBUM)
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -72,25 +76,36 @@ fun SortDialog(
                         when (order) {
                             LibrarySortOrder.TITLE -> "Album Title"
                             LibrarySortOrder.ARTIST -> "Artist"
-                            LibrarySortOrder.ALBUM -> "Album Title"
+                            else -> "Album Title"
                         }
                     } else {
                         when (order) {
                             LibrarySortOrder.TITLE -> "Title"
-                            LibrarySortOrder.ARTIST -> "Artist"
-                            LibrarySortOrder.ALBUM -> "Album"
+                            LibrarySortOrder.DATE_MODIFIED -> "Last modified date"
+                            LibrarySortOrder.DATE_CREATED -> "Created date"
+                            else -> "Title"
+                        }
+                    }
+                    val onSelectOrder = {
+                        if (selectedOrder != order) {
+                            selectedOrder = order
+                            selectedDirection = if (order == LibrarySortOrder.DATE_MODIFIED || order == LibrarySortOrder.DATE_CREATED) {
+                                SortDirection.DESCENDING
+                            } else {
+                                SortDirection.ASCENDING
+                            }
                         }
                     }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selectedOrder = order }
+                            .clickable(onClick = onSelectOrder)
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = selectedOrder == order,
-                            onClick = { selectedOrder = order }
+                            onClick = onSelectOrder
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = label, style = MaterialTheme.typography.bodyLarge)
@@ -108,10 +123,11 @@ fun SortDialog(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
+                val isDateSort = selectedOrder == LibrarySortOrder.DATE_MODIFIED || selectedOrder == LibrarySortOrder.DATE_CREATED
                 SortDirection.entries.forEach { direction ->
                     val label = when (direction) {
-                        SortDirection.ASCENDING -> "Ascending (A → Z)"
-                        SortDirection.DESCENDING -> "Descending (Z → A)"
+                        SortDirection.ASCENDING -> if (isDateSort) "Ascending (Oldest first)" else "Ascending (A → Z)"
+                        SortDirection.DESCENDING -> if (isDateSort) "Descending (Newest first)" else "Descending (Z → A)"
                     }
                     Row(
                         modifier = Modifier

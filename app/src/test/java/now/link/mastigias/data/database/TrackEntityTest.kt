@@ -26,7 +26,8 @@ class TrackEntityTest {
             isTagged = true,
             dateModified = 1700000000L,
             mimeType = "audio/flac",
-            sizeBytes = 25000000L
+            sizeBytes = 25000000L,
+            dateAdded = 1695000000L
         )
 
         val domain = entity.toDomain()
@@ -41,6 +42,8 @@ class TrackEntityTest {
         assertEquals(true, domain.hasArtwork)
         assertEquals(true, domain.isTagged)
         assertEquals(1700000000L, domain.dateModified)
+        assertEquals(1695000000L, domain.dateAdded)
+        assertEquals(1695000000L, domain.dateCreated)
     }
 
     @Test
@@ -55,7 +58,8 @@ class TrackEntityTest {
             durationMs = 425000L,
             hasArtwork = false,
             isTagged = true,
-            dateModified = 1690000000L
+            dateModified = 1690000000L,
+            dateAdded = 1680000000L
         )
 
         val entity = domain.toEntity(mimeType = "audio/mpeg", sizeBytes = 10000000L)
@@ -70,6 +74,7 @@ class TrackEntityTest {
         assertEquals(false, entity.hasArtwork)
         assertEquals(true, entity.isTagged)
         assertEquals(1690000000L, entity.dateModified)
+        assertEquals(1680000000L, entity.dateAdded)
         assertEquals("audio/mpeg", entity.mimeType)
         assertEquals(10000000L, entity.sizeBytes)
     }

@@ -3,7 +3,9 @@ package now.link.mastigias.ui.library
 enum class LibrarySortOrder {
     TITLE,
     ARTIST,
-    ALBUM
+    ALBUM,
+    DATE_MODIFIED,
+    DATE_CREATED
 }
 
 enum class SortDirection {

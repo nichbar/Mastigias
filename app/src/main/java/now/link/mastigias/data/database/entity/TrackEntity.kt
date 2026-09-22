@@ -13,7 +13,8 @@ import now.link.mastigias.domain.model.Track
         Index(value = ["title"]),
         Index(value = ["artist"]),
         Index(value = ["album"]),
-        Index(value = ["date_modified"])
+        Index(value = ["date_modified"]),
+        Index(value = ["date_added"])
     ]
 )
 data class TrackEntity(
@@ -29,7 +30,8 @@ data class TrackEntity(
     @ColumnInfo(name = "is_tagged") val isTagged: Boolean,
     @ColumnInfo(name = "date_modified") val dateModified: Long,
     @ColumnInfo(name = "mime_type") val mimeType: String,
-    @ColumnInfo(name = "size_bytes") val sizeBytes: Long
+    @ColumnInfo(name = "size_bytes") val sizeBytes: Long,
+    @ColumnInfo(name = "date_added", defaultValue = "0") val dateAdded: Long = 0L
 )
 
 fun TrackEntity.toDomain(): Track = Track(
@@ -42,7 +44,8 @@ fun TrackEntity.toDomain(): Track = Track(
     durationMs = durationMs,
     hasArtwork = hasArtwork,
     isTagged = isTagged,
-    dateModified = dateModified
+    dateModified = dateModified,
+    dateAdded = dateAdded
 )
 
 fun Track.toEntity(mimeType: String = "", sizeBytes: Long = 0L): TrackEntity = TrackEntity(
@@ -57,5 +60,6 @@ fun Track.toEntity(mimeType: String = "", sizeBytes: Long = 0L): TrackEntity = T
     isTagged = isTagged,
     dateModified = dateModified,
     mimeType = mimeType,
-    sizeBytes = sizeBytes
+    sizeBytes = sizeBytes,
+    dateAdded = dateAdded
 )

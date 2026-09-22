@@ -75,7 +75,7 @@ class LibraryViewModel @Inject constructor(
         FilterAndSortParams(query, untagged, viewMode, order, direction)
     }
 
-    private val contentFlow: Flow<Pair<List<Track>, List<Album>>> = filterAndSortParamsFlow
+    private val contentFlow: Flow<Pair<FilterAndSortParams, Pair<List<Track>, List<Album>>>> = filterAndSortParamsFlow
         .debounce { params -> if (params.query.isBlank()) 0L else 200L }
         .flatMapLatest { params ->
             if (params.viewMode == LibraryViewMode.ALBUMS) {
@@ -90,7 +90,7 @@ class LibraryViewModel @Inject constructor(
                             trackCache[track.id] = track
                         }
                     }
-                    emptyList<Track>() to albums
+                    params to (emptyList<Track>() to albums)
                 }
             } else {
                 getLibraryTracksUseCase(
@@ -102,7 +102,7 @@ class LibraryViewModel @Inject constructor(
                     tracks.forEach { track ->
                         trackCache[track.id] = track
                     }
-                    tracks to emptyList<Album>()
+                    params to (tracks to emptyList<Album>())
                 }
             }
         }
@@ -116,11 +116,11 @@ class LibraryViewModel @Inject constructor(
 
     val uiState: StateFlow<LibraryUiState> = combine(
         contentFlow,
-        filterAndSortParamsFlow,
         syncStatusFlow,
         _selectedTrackIds,
         _expandedAlbumKeys
-    ) { (tracks, albums), filterParams, status, selectedTrackIds, expandedAlbumKeys ->
+    ) { (filterParams, content), status, selectedTrackIds, expandedAlbumKeys ->
+        val (tracks, albums) = content
         LibraryUiState(
             tracks = tracks,
             albums = albums,

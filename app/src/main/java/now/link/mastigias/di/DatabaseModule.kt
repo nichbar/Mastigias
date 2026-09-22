@@ -24,7 +24,10 @@ object DatabaseModule {
             context,
             MastigiasDatabase::class.java,
             MastigiasDatabase.DATABASE_NAME
-        ).build()
+        )
+            .addMigrations(MastigiasDatabase.MIGRATION_1_2)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides

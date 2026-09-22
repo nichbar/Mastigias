@@ -62,6 +62,12 @@ class GetLibraryTracksUseCase @Inject constructor(
         LibrarySortOrder.ALBUM -> compareBy<Track> { it.album.lowercase(Locale.ROOT) }
             .thenBy { it.trackNumber }
             .thenBy { it.title.lowercase(Locale.ROOT) }
+        LibrarySortOrder.DATE_MODIFIED -> compareBy<Track> { it.dateModified }
+            .thenBy { it.title.lowercase(Locale.ROOT) }
+            .thenBy { it.artist.lowercase(Locale.ROOT) }
+        LibrarySortOrder.DATE_CREATED -> compareBy<Track> { it.dateCreated }
+            .thenBy { it.title.lowercase(Locale.ROOT) }
+            .thenBy { it.artist.lowercase(Locale.ROOT) }
     }
 
     companion object {

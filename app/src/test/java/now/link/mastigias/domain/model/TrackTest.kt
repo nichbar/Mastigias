@@ -44,4 +44,40 @@ class TrackTest {
         assertFalse(Track.computeIsTagged("Title", "Artist", "<Unknown Album>"))
         assertFalse(Track.computeIsTagged("<unknown>", "<unknown>", "<unknown>"))
     }
+
+    @Test
+    fun `dateCreated returns dateAdded when dateAdded is greater than zero`() {
+        val track = Track(
+            id = 1L,
+            path = "/music/song.mp3",
+            title = "Song",
+            artist = "Artist",
+            album = "Album",
+            trackNumber = 1,
+            durationMs = 1000L,
+            hasArtwork = false,
+            isTagged = true,
+            dateModified = 500L,
+            dateAdded = 200L
+        )
+        org.junit.Assert.assertEquals(200L, track.dateCreated)
+    }
+
+    @Test
+    fun `dateCreated falls back to dateModified when dateAdded is zero`() {
+        val track = Track(
+            id = 1L,
+            path = "/music/song.mp3",
+            title = "Song",
+            artist = "Artist",
+            album = "Album",
+            trackNumber = 1,
+            durationMs = 1000L,
+            hasArtwork = false,
+            isTagged = true,
+            dateModified = 500L,
+            dateAdded = 0L
+        )
+        org.junit.Assert.assertEquals(500L, track.dateCreated)
+    }
 }

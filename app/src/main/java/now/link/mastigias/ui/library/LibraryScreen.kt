@@ -102,6 +102,26 @@ fun LibraryScreen(
         }
     }
 
+    var lastSortOrder by remember { mutableStateOf(uiState.sortOrder) }
+    var lastSortDirection by remember { mutableStateOf(uiState.sortDirection) }
+    var lastViewMode by remember { mutableStateOf(uiState.viewMode) }
+
+    LaunchedEffect(uiState.sortOrder, uiState.sortDirection, uiState.viewMode) {
+        lazyListState.scrollToItem(0)
+    }
+
+    LaunchedEffect(uiState.tracks, uiState.albums) {
+        if (uiState.sortOrder != lastSortOrder ||
+            uiState.sortDirection != lastSortDirection ||
+            uiState.viewMode != lastViewMode
+        ) {
+            lastSortOrder = uiState.sortOrder
+            lastSortDirection = uiState.sortDirection
+            lastViewMode = uiState.viewMode
+            lazyListState.scrollToItem(0)
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -299,8 +319,9 @@ fun LibraryScreen(
                 } else {
                     when (uiState.sortOrder) {
                         LibrarySortOrder.TITLE -> "Title"
-                        LibrarySortOrder.ARTIST -> "Artist"
-                        LibrarySortOrder.ALBUM -> "Album"
+                        LibrarySortOrder.DATE_MODIFIED -> "Last modified date"
+                        LibrarySortOrder.DATE_CREATED -> "Created date"
+                        else -> "Title"
                     }
                 }
                 val dirSymbol = if (uiState.sortDirection == SortDirection.ASCENDING) "↑" else "↓"
@@ -353,7 +374,7 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = uiState.albums,
-                                key = { album -> album.key },
+                                key = { album -> "${uiState.sortOrder}_${uiState.sortDirection}_${album.key}" },
                                 contentType = { "album_accordion" }
                             ) { album ->
                                 AlbumAccordionItem(
@@ -402,7 +423,7 @@ fun LibraryScreen(
                         ) {
                             items(
                                 items = uiState.tracks,
-                                key = { it.id },
+                                key = { "${uiState.sortOrder}_${uiState.sortDirection}_${it.id}" },
                                 contentType = { "track_item" }
                             ) { track ->
                                 TrackListItem(

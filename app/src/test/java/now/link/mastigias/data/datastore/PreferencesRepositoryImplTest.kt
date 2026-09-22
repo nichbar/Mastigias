@@ -66,6 +66,12 @@ class PreferencesRepositoryImplTest {
 
         repository.setSortOrder(LibrarySortOrder.ALBUM)
         assertEquals(LibrarySortOrder.ALBUM, repository.sortOrderFlow.first())
+
+        repository.setSortOrder(LibrarySortOrder.DATE_MODIFIED)
+        assertEquals(LibrarySortOrder.DATE_MODIFIED, repository.sortOrderFlow.first())
+
+        repository.setSortOrder(LibrarySortOrder.DATE_CREATED)
+        assertEquals(LibrarySortOrder.DATE_CREATED, repository.sortOrderFlow.first())
     }
 
     @Test

@@ -29,6 +29,7 @@ data class MediaStoreAudioItem(
     val trackNumber: Int,
     val durationMs: Long,
     val dateModified: Long,
+    val dateAdded: Long = 0L,
     val mimeType: String,
     val sizeBytes: Long
 )
@@ -92,6 +93,7 @@ open class MediaStoreDataSource {
             MediaStore.Audio.Media.TRACK,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATE_MODIFIED,
+            MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.MIME_TYPE,
             MediaStore.Audio.Media.SIZE
         )
@@ -120,6 +122,7 @@ open class MediaStoreDataSource {
             val trackCol = c.getColumnIndex(MediaStore.Audio.Media.TRACK)
             val durationCol = c.getColumnIndex(MediaStore.Audio.Media.DURATION)
             val dateModifiedCol = c.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED)
+            val dateAddedCol = c.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
             val mimeTypeCol = c.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE)
             val sizeCol = c.getColumnIndex(MediaStore.Audio.Media.SIZE)
 
@@ -137,6 +140,7 @@ open class MediaStoreDataSource {
                 val trackNumber = if (trackCol >= 0) c.getInt(trackCol) else 0
                 val durationMs = if (durationCol >= 0) c.getLong(durationCol) else 0L
                 val dateModified = if (dateModifiedCol >= 0) c.getLong(dateModifiedCol) else 0L
+                val dateAdded = if (dateAddedCol >= 0) c.getLong(dateAddedCol) else 0L
                 val mimeType = if (mimeTypeCol >= 0) c.getString(mimeTypeCol) ?: "" else ""
                 val sizeBytes = if (sizeCol >= 0) c.getLong(sizeCol) else 0L
 
@@ -150,6 +154,7 @@ open class MediaStoreDataSource {
                         trackNumber = trackNumber,
                         durationMs = durationMs,
                         dateModified = dateModified,
+                        dateAdded = dateAdded,
                         mimeType = mimeType.ifBlank { AudioFormats.getMimeType(path) },
                         sizeBytes = sizeBytes
                     )
