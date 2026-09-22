@@ -27,7 +27,7 @@ Some tracks on my Android device used the `album-artist` field instead of `artis
 ## Features
 
 - **High-Performance Native Engine**: C++ TagLib 1.13.1 integrated via JNI supporting MP3, FLAC, M4A/MP4, OGG/Opus/Vorbis, WAV, AIFF, and WMA.
-- **Batch & Single File Editing**: Edit individual tracks or batch-edit common metadata across entire albums simultaneously.
+- **Batch & Single File Editing**: Edit individual tracks, multi-track selections, or entire albums simultaneously.
 - **Embedded Artwork**: Embed and replace album art with two-pass bounds decoding and downsampling via Coil 3.
 - **Lyrics Integration**: Multiline lyrics editor with direct LRCLIB search to fetch and select synchronized (.lrc) and plain lyrics candidates.
 
