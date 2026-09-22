@@ -1,5 +1,6 @@
 package now.link.mastigias.ui.library
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -22,9 +23,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -54,15 +56,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import now.link.mastigias.ui.common.FloatingScrollToTop
+import now.link.mastigias.ui.common.ConfirmationDialog
 import now.link.mastigias.ui.common.MastigiasSearchBar
 import now.link.mastigias.ui.library.components.AlbumAccordionItem
+import now.link.mastigias.ui.library.components.LibraryFab
 import now.link.mastigias.ui.library.components.TrackListItem
 import now.link.mastigias.ui.library.dialogs.FolderFilterDialog
 import now.link.mastigias.ui.library.dialogs.SortDialog
@@ -84,6 +86,11 @@ fun LibraryScreen(
     var showSortDialog by remember { mutableStateOf(false) }
     var showFolderDialog by remember { mutableStateOf(false) }
     var showViewModeMenu by remember { mutableStateOf(false) }
+    var showMultiAlbumWarningDialog by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = uiState.isSelectionMode) {
+        viewModel.clearSelection()
+    }
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { msg ->
@@ -99,49 +106,95 @@ fun LibraryScreen(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Mastigias",
-                        style = MaterialTheme.typography.titleLarge
+            if (uiState.isSelectionMode) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "${uiState.selectedCount} selected",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { viewModel.clearSelection() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear selection"
+                            )
+                        }
+                    },
+                    actions = {
+                        // Select All
+                        IconButton(onClick = { viewModel.toggleSelectAll() }) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Select all"
+                            )
+                        }
+                        // Batch Edit
+                        IconButton(
+                            onClick = {
+                                if (viewModel.isMultiAlbumSelected()) {
+                                    showMultiAlbumWarningDialog = true
+                                } else {
+                                    val ids = uiState.selectedTrackIds.toLongArray()
+                                    viewModel.clearSelection()
+                                    onNavigateToEditor(ids)
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Batch edit"
+                            )
+                        }
+                    },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent
                     )
-                },
-                actions = {
-                    // Sync button
-                    IconButton(
-                        onClick = { viewModel.sync() },
-                        enabled = !uiState.isSyncing
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Scan media"
-                        )
-                    }
-                    // Sort button
-                    IconButton(onClick = { showSortDialog = true }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Sort library",
-                            modifier = Modifier.rotate(-90f)
-                        )
-                    }
-                    // Settings button
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
-                        )
-                    }
-                },
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent
                 )
-            )
+            } else {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Mastigias",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    actions = {
+                        // Sync button
+                        IconButton(
+                            onClick = { viewModel.sync() },
+                            enabled = !uiState.isSyncing
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Scan media"
+                            )
+                        }
+                        // Settings button
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings"
+                            )
+                        }
+                    },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent
+                    )
+                )
+            }
         },
         floatingActionButton = {
-            FloatingScrollToTop(lazyListState = lazyListState)
+            LibraryFab(
+                lazyListState = lazyListState,
+                isSyncing = uiState.isSyncing,
+                onRefresh = { viewModel.sync() }
+            )
         }
     ) { innerPadding ->
         val layoutDirection = LocalLayoutDirection.current
@@ -309,10 +362,25 @@ fun LibraryScreen(
                                 AlbumAccordionItem(
                                     album = album,
                                     onTrackClick = { track ->
-                                        onNavigateToEditor(longArrayOf(track.id))
+                                        if (uiState.isSelectionMode) {
+                                            viewModel.toggleTrackSelection(track.id)
+                                        } else {
+                                            onNavigateToEditor(longArrayOf(track.id))
+                                        }
                                     },
                                     onEditAlbumClick = { albumToEdit ->
                                         viewModel.editAlbum(albumToEdit, onNavigateToEditor)
+                                    },
+                                    selectedTrackIds = uiState.selectedTrackIds,
+                                    isSelectionMode = uiState.isSelectionMode,
+                                    onTrackLongClick = { track ->
+                                        viewModel.toggleTrackSelection(track.id)
+                                    },
+                                    onToggleTrackSelect = { track ->
+                                        viewModel.toggleTrackSelection(track.id)
+                                    },
+                                    onToggleAlbumSelect = { albumToSelect ->
+                                        viewModel.toggleAlbumSelection(albumToSelect)
                                     }
                                 )
                             }
@@ -341,7 +409,19 @@ fun LibraryScreen(
                                 TrackListItem(
                                     track = track,
                                     onClick = {
-                                        onNavigateToEditor(longArrayOf(track.id))
+                                        if (uiState.isSelectionMode) {
+                                            viewModel.toggleTrackSelection(track.id)
+                                        } else {
+                                            onNavigateToEditor(longArrayOf(track.id))
+                                        }
+                                    },
+                                    isSelected = track.id in uiState.selectedTrackIds,
+                                    isSelectionMode = uiState.isSelectionMode,
+                                    onLongClick = {
+                                        viewModel.toggleTrackSelection(track.id)
+                                    },
+                                    onToggleSelect = {
+                                        viewModel.toggleTrackSelection(track.id)
                                     }
                                 )
                             }
@@ -373,6 +453,21 @@ fun LibraryScreen(
             onRemoveFilter = { viewModel.removeFolderFilter(it) },
             onToggleFilterMode = { viewModel.toggleFolderFilterMode(it) },
             onDismiss = { showFolderDialog = false }
+        )
+    }
+
+    if (showMultiAlbumWarningDialog) {
+        ConfirmationDialog(
+            title = "Different Albums Selected",
+            message = "The selected tracks belong to different albums. Batch editing might overwrite existing tag values across these distinct albums. Do you want to proceed?",
+            confirmButtonText = "Proceed",
+            dismissButtonText = "Cancel",
+            onConfirm = {
+                val ids = uiState.selectedTrackIds.toLongArray()
+                viewModel.clearSelection()
+                onNavigateToEditor(ids)
+            },
+            onDismiss = { showMultiAlbumWarningDialog = false }
         )
     }
 }

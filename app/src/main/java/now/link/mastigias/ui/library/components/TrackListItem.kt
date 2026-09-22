@@ -1,7 +1,8 @@
 package now.link.mastigias.ui.library.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,20 +26,54 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import now.link.mastigias.domain.model.Track
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TrackListItem(
     track: Track,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongClick: () -> Unit = {},
+    onToggleSelect: () -> Unit = {}
 ) {
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
+            .background(backgroundColor)
+            .combinedClickable(
+                onClick = {
+                    if (isSelectionMode) {
+                        onToggleSelect()
+                    } else {
+                        onClick()
+                    }
+                },
+                onLongClick = {
+                    if (!isSelectionMode) {
+                        onLongClick()
+                    } else {
+                        onToggleSelect()
+                    }
+                }
+            )
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isSelectionMode) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggleSelect() }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         // Thumbnail
         Box(
             modifier = Modifier

@@ -40,7 +40,8 @@ data class EditorUiState(
     val saveProgress: Float = 0f,
     val pendingConsentIntent: IntentSender? = null,
     val error: String? = null,
-    val lyricsSearchState: LyricsSearchUiState = LyricsSearchUiState()
+    val lyricsSearchState: LyricsSearchUiState = LyricsSearchUiState(),
+    val isMultiAlbum: Boolean = false
 ) {
     val isDirty: Boolean
         get() = isArtworkDirty || removeArtwork || fields.values.any { it.isDirty }

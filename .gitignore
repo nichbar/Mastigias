@@ -19,3 +19,7 @@ key.properties
 Mastigias*.apk
 release-notes.md
 
+# Agent harness
+.pi/
+
+

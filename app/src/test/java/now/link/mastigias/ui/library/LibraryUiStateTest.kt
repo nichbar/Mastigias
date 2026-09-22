@@ -96,4 +96,19 @@ class LibraryUiStateTest {
         )
         assertFalse(populatedAccordionState.isEmpty)
     }
+
+    @Test
+    fun `isSelectionMode and selectedCount behave correctly based on selectedTrackIds`() {
+        val emptySelectionState = LibraryUiState(
+            selectedTrackIds = emptySet()
+        )
+        assertFalse(emptySelectionState.isSelectionMode)
+        org.junit.Assert.assertEquals(0, emptySelectionState.selectedCount)
+
+        val activeSelectionState = LibraryUiState(
+            selectedTrackIds = setOf(10L, 20L, 30L)
+        )
+        assertTrue(activeSelectionState.isSelectionMode)
+        org.junit.Assert.assertEquals(3, activeSelectionState.selectedCount)
+    }
 }

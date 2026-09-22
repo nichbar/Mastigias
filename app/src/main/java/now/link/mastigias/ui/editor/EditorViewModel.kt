@@ -185,12 +185,15 @@ class EditorViewModel @Inject constructor(
                     }
                 }
 
+                val isMultiAlbum = batchMetadata.fields[TagField.ALBUM]?.isMixed == true
+
                 _uiState.value = _uiState.value.copy(
                     fields = fieldMap,
                     artwork = batchMetadata.artwork,
                     isArtworkDirty = false,
                     removeArtwork = false,
-                    isArtworkBatchEnabled = false
+                    isArtworkBatchEnabled = false,
+                    isMultiAlbum = isMultiAlbum
                 )
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "Failed to read batch metadata"

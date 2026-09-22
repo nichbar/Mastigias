@@ -12,11 +12,18 @@ data class LibraryUiState(
     val sortDirection: SortDirection = SortDirection.ASCENDING,
     val isUntaggedFilterActive: Boolean = false,
     val isSyncing: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val selectedTrackIds: Set<Long> = emptySet()
 ) {
     val isAccordionView: Boolean
         get() = viewMode == LibraryViewMode.ALBUMS
 
     val isEmpty: Boolean
         get() = if (isAccordionView) albums.isEmpty() else tracks.isEmpty()
+
+    val isSelectionMode: Boolean
+        get() = selectedTrackIds.isNotEmpty()
+
+    val selectedCount: Int
+        get() = selectedTrackIds.size
 }

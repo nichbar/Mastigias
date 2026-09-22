@@ -174,6 +174,71 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `batch mode sets isMultiAlbum false when tracks share the same album`() = runBlocking {
+        val viewModel = createViewModel()
+        viewModel.initialize(longArrayOf(1L, 2L))
+
+        assertFalse(viewModel.uiState.value.isMultiAlbum)
+    }
+
+    @Test
+    fun `batch mode sets isMultiAlbum true when tracks belong to different albums`() = runBlocking {
+        val trackDiffAlbum = Track(
+            id = 3L,
+            path = "/music/song3.mp3",
+            title = "Track 3",
+            artist = "Common Artist",
+            album = "Different Album",
+            trackNumber = 3,
+            durationMs = 210000L,
+            hasArtwork = true,
+            isTagged = true,
+            dateModified = 3000L
+        )
+        musicRepository.tracks[trackDiffAlbum.id] = trackDiffAlbum
+
+        val tagEngine = object : TagEngine {
+            override suspend fun readMetadata(path: String): Result<AudioMetadata> {
+                val album = if (path == track1.path) "Common Album" else "Different Album"
+                return Result.success(
+                    AudioMetadata(
+                        trackId = if (path == track1.path) 1L else 3L,
+                        path = path,
+                        fields = mapOf(
+                            TagField.TITLE to "Track",
+                            TagField.ARTIST to "Common Artist",
+                            TagField.ALBUM to album
+                        ),
+                        artwork = artwork,
+                        bitrateKbps = 320,
+                        sampleRateHz = 44100,
+                        channels = 2,
+                        durationMs = 180000L
+                    )
+                )
+            }
+            override suspend fun readArtwork(path: String): Result<ByteArray?> = Result.success(null)
+            override suspend fun writeMetadata(path: String, patch: TagPatch): Result<Unit> = Result.success(Unit)
+        }
+        val readTrackUseCase = ReadTrackMetadataUseCase(musicRepository, tagEngine, testDispatchers)
+        val readBatchUseCase = ReadBatchMetadataUseCase(readTrackUseCase, testDispatchers)
+        val vm = EditorViewModel(
+            savedStateHandle = SavedStateHandle(),
+            readTrackMetadataUseCase = readTrackUseCase,
+            readBatchMetadataUseCase = readBatchUseCase,
+            writeTrackMetadataUseCase = writeTrackMetadataUseCase,
+            batchWriteMetadataUseCase = batchWriteMetadataUseCase,
+            getTracksByAlbumUseCase = getTracksByAlbumUseCase,
+            fetchLyricsUseCase = fetchLyricsUseCase,
+            mediaStoreDataSource = mediaStoreDataSource,
+            dispatchers = testDispatchers
+        )
+        vm.initialize(longArrayOf(1L, 3L))
+
+        assertTrue(vm.uiState.value.isMultiAlbum)
+    }
+
+    @Test
     fun `modifying shared field marks it dirty and enabled in batch`() = runBlocking {
         val viewModel = createViewModel()
         viewModel.initialize(longArrayOf(1L, 2L))

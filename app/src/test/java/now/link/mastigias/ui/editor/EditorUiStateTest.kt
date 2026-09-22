@@ -92,4 +92,16 @@ class EditorUiStateTest {
         org.junit.Assert.assertEquals(event1.hashCode(), event2.hashCode())
         org.junit.Assert.assertNotEquals(event1, event3)
     }
+
+    @Test
+    fun `isMultiAlbum defaults to false and respects assigned value`() {
+        val defaultState = EditorUiState(mode = EditorMode.Batch(listOf(1L, 2L)))
+        assertFalse(defaultState.isMultiAlbum)
+
+        val multiAlbumState = EditorUiState(
+            mode = EditorMode.Batch(listOf(1L, 2L)),
+            isMultiAlbum = true
+        )
+        assertTrue(multiAlbumState.isMultiAlbum)
+    }
 }

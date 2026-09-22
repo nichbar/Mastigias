@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.core.logging.LogManager
 import now.link.mastigias.domain.model.Album
 import now.link.mastigias.domain.model.FilterMode
@@ -24,6 +26,7 @@ import now.link.mastigias.domain.repository.PreferencesRepository
 import now.link.mastigias.domain.usecase.GetAlbumsUseCase
 import now.link.mastigias.domain.usecase.GetLibraryTracksUseCase
 import now.link.mastigias.domain.usecase.SyncMediaStoreUseCase
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private data class FilterAndSortParams(
@@ -45,7 +48,8 @@ class LibraryViewModel @Inject constructor(
     private val getLibraryTracksUseCase: GetLibraryTracksUseCase,
     private val getAlbumsUseCase: GetAlbumsUseCase,
     private val syncMediaStoreUseCase: SyncMediaStoreUseCase,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val dispatchers: AppDispatchers = AppDispatchers()
 ) : ViewModel() {
 
     companion object {
@@ -56,6 +60,9 @@ class LibraryViewModel @Inject constructor(
     private val _isUntaggedFilterActive = MutableStateFlow(false)
     private val _isSyncing = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _selectedTrackIds = MutableStateFlow<Set<Long>>(emptySet())
+
+    private val trackCache = ConcurrentHashMap<Long, Track>()
 
     private val filterAndSortParamsFlow: Flow<FilterAndSortParams> = combine(
         _searchQuery,
@@ -76,14 +83,26 @@ class LibraryViewModel @Inject constructor(
                     untaggedOnly = params.untaggedOnly,
                     sortOrder = params.sortOrder,
                     sortDirection = params.sortDirection
-                ).map { albums -> emptyList<Track>() to albums }
+                ).map { albums ->
+                    albums.forEach { album ->
+                        album.tracks.forEach { track ->
+                            trackCache[track.id] = track
+                        }
+                    }
+                    emptyList<Track>() to albums
+                }
             } else {
                 getLibraryTracksUseCase(
                     query = params.query,
                     untaggedOnly = params.untaggedOnly,
                     sortOrder = params.sortOrder,
                     sortDirection = params.sortDirection
-                ).map { tracks -> tracks to emptyList<Album>() }
+                ).map { tracks ->
+                    tracks.forEach { track ->
+                        trackCache[track.id] = track
+                    }
+                    tracks to emptyList<Album>()
+                }
             }
         }
 
@@ -97,8 +116,9 @@ class LibraryViewModel @Inject constructor(
     val uiState: StateFlow<LibraryUiState> = combine(
         contentFlow,
         filterAndSortParamsFlow,
-        syncStatusFlow
-    ) { (tracks, albums), filterParams, status ->
+        syncStatusFlow,
+        _selectedTrackIds
+    ) { (tracks, albums), filterParams, status, selectedTrackIds ->
         LibraryUiState(
             tracks = tracks,
             albums = albums,
@@ -108,10 +128,11 @@ class LibraryViewModel @Inject constructor(
             sortDirection = filterParams.sortDirection,
             isUntaggedFilterActive = filterParams.untaggedOnly,
             isSyncing = status.isSyncing,
-            errorMessage = status.errorMessage
+            errorMessage = status.errorMessage,
+            selectedTrackIds = selectedTrackIds
         )
     }.stateIn(
-        scope = viewModelScope,
+        scope = viewModelScope + dispatchers.main,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = LibraryUiState()
     )
@@ -130,25 +151,83 @@ class LibraryViewModel @Inject constructor(
     }
 
     fun onViewModeChanged(mode: LibraryViewMode) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             preferencesRepository.setViewMode(mode)
         }
     }
 
     fun onSortOrderChanged(order: LibrarySortOrder) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             preferencesRepository.setSortOrder(order)
         }
     }
 
     fun onSortDirectionChanged(direction: SortDirection) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             preferencesRepository.setSortDirection(direction)
         }
     }
 
     fun onToggleUntaggedFilter() {
         _isUntaggedFilterActive.value = !_isUntaggedFilterActive.value
+    }
+
+    fun toggleTrackSelection(trackId: Long) {
+        val current = _selectedTrackIds.value
+        _selectedTrackIds.value = if (current.contains(trackId)) {
+            current - trackId
+        } else {
+            current + trackId
+        }
+    }
+
+    fun toggleSelectAll() {
+        val state = uiState.value
+        val visibleTrackIds = if (state.isAccordionView) {
+            state.albums.flatMap { it.tracks }.map { it.id }.toSet()
+        } else {
+            state.tracks.map { it.id }.toSet()
+        }
+        val current = _selectedTrackIds.value
+        if (visibleTrackIds.isNotEmpty() && current.containsAll(visibleTrackIds)) {
+            _selectedTrackIds.value = emptySet()
+        } else {
+            _selectedTrackIds.value = visibleTrackIds
+        }
+    }
+
+    fun toggleAlbumSelection(album: Album) {
+        val albumTrackIds = album.tracks.map { it.id }.toSet()
+        val current = _selectedTrackIds.value
+        if (current.containsAll(albumTrackIds)) {
+            _selectedTrackIds.value = current - albumTrackIds
+        } else {
+            _selectedTrackIds.value = current + albumTrackIds
+        }
+    }
+
+    fun clearSelection() {
+        _selectedTrackIds.value = emptySet()
+    }
+
+    fun isMultiAlbumSelected(): Boolean {
+        val selectedIds = _selectedTrackIds.value
+        if (selectedIds.size <= 1) return false
+
+        val state = uiState.value
+        val tracksFromState = if (state.isAccordionView) {
+            state.albums.flatMap { it.tracks }
+        } else {
+            state.tracks
+        }
+        tracksFromState.forEach { trackCache[it.id] = it }
+
+        val tracks = selectedIds.mapNotNull { trackCache[it] }
+        val distinctAlbums = tracks.map {
+            "${it.album.trim().lowercase()}:::${it.artist.trim().lowercase()}"
+        }.distinct()
+
+        return distinctAlbums.size > 1
     }
 
     fun editAlbum(album: Album, onNavigateToEditor: (LongArray) -> Unit) {
@@ -161,7 +240,7 @@ class LibraryViewModel @Inject constructor(
     fun sync() {
         if (_isSyncing.value) return
         LogManager.d(TAG, "Triggering media store sync from library")
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             _isSyncing.value = true
             val result = syncMediaStoreUseCase()
             if (result.isFailure) {
@@ -179,21 +258,21 @@ class LibraryViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addFolderFilter(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val current = folderFilters.value.filter { it.uri != filter.uri }
             preferencesRepository.setFolderFilters(current + filter)
         }
     }
 
     fun removeFolderFilter(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val current = folderFilters.value.filter { it.uri != filter.uri }
             preferencesRepository.setFolderFilters(current)
         }
     }
 
     fun toggleFolderFilterMode(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val updated = folderFilters.value.map {
                 if (it.uri == filter.uri) {
                     it.copy(mode = if (it.isInclude) FilterMode.EXCLUDE else FilterMode.INCLUDE)

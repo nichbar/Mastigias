@@ -4,8 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +55,12 @@ fun AlbumAccordionItem(
     album: Album,
     onTrackClick: (Track) -> Unit,
     onEditAlbumClick: (Album) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedTrackIds: Set<Long> = emptySet(),
+    isSelectionMode: Boolean = false,
+    onTrackLongClick: (Track) -> Unit = {},
+    onToggleTrackSelect: (Track) -> Unit = {},
+    onToggleAlbumSelect: (Album) -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val arrowRotation by animateFloatAsState(
@@ -65,6 +73,11 @@ fun AlbumAccordionItem(
         album.coverTrackId?.let { id ->
             album.tracks.firstOrNull { it.id == id }
         } ?: album.tracks.firstOrNull()
+    }
+
+    val albumTrackIds = remember(album.tracks) { album.tracks.map { it.id }.toSet() }
+    val isAllSelected = remember(albumTrackIds, selectedTrackIds) {
+        albumTrackIds.isNotEmpty() && albumTrackIds.all { it in selectedTrackIds }
     }
 
     Card(
@@ -85,6 +98,14 @@ fun AlbumAccordionItem(
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                if (isSelectionMode) {
+                    Checkbox(
+                        checked = isAllSelected,
+                        onCheckedChange = { onToggleAlbumSelect(album) }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
                 // Album artwork thumbnail
                 Box(
                     modifier = Modifier
@@ -128,18 +149,20 @@ fun AlbumAccordionItem(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                IconButton(
-                    onClick = { onEditAlbumClick(album) },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit_album_description),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                if (!isSelectionMode) {
+                    IconButton(
+                        onClick = { onEditAlbumClick(album) },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit_album_description),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
                 }
-                Spacer(modifier = Modifier.width(4.dp))
 
                 // Arrow rotated 90 or -90 deg
                 Icon(
@@ -169,7 +192,11 @@ fun AlbumAccordionItem(
                         key(track.id) {
                             AlbumChildTrackRow(
                                 track = track,
-                                onClick = { onTrackClick(track) }
+                                onClick = { onTrackClick(track) },
+                                isSelected = track.id in selectedTrackIds,
+                                isSelectionMode = isSelectionMode,
+                                onLongClick = { onTrackLongClick(track) },
+                                onToggleSelect = { onToggleTrackSelect(track) }
                             )
                         }
                     }
@@ -179,20 +206,54 @@ fun AlbumAccordionItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AlbumChildTrackRow(
     track: Track,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    isSelectionMode: Boolean = false,
+    onLongClick: () -> Unit = {},
+    onToggleSelect: () -> Unit = {}
 ) {
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLowest
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .clickable(onClick = onClick)
+            .background(backgroundColor)
+            .combinedClickable(
+                onClick = {
+                    if (isSelectionMode) {
+                        onToggleSelect()
+                    } else {
+                        onClick()
+                    }
+                },
+                onLongClick = {
+                    if (!isSelectionMode) {
+                        onLongClick()
+                    } else {
+                        onToggleSelect()
+                    }
+                }
+            )
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isSelectionMode) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggleSelect() }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
         // Track Index Badge
         Surface(
             shape = CircleShape,
