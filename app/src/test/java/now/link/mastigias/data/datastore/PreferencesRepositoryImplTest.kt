@@ -141,15 +141,15 @@ class PreferencesRepositoryImplTest {
     }
 
     @Test
-    fun `loggingEnabledFlow defaults to true and setLoggingEnabled updates DataStore and LogManager`() = runBlocking {
-        assertEquals(true, repository.loggingEnabledFlow.first())
-
-        repository.setLoggingEnabled(false)
+    fun `loggingEnabledFlow defaults to false and setLoggingEnabled updates DataStore and LogManager`() = runBlocking {
         assertEquals(false, repository.loggingEnabledFlow.first())
-        assertEquals(false, LogManager.isLogEnabled())
 
         repository.setLoggingEnabled(true)
         assertEquals(true, repository.loggingEnabledFlow.first())
         assertEquals(true, LogManager.isLogEnabled())
+
+        repository.setLoggingEnabled(false)
+        assertEquals(false, repository.loggingEnabledFlow.first())
+        assertEquals(false, LogManager.isLogEnabled())
     }
 }

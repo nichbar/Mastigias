@@ -207,7 +207,7 @@ class PreferencesRepositoryImpl @Inject constructor(
             }
         }
         .map { prefs ->
-            prefs[KEY_LOGGING_ENABLED] ?: true
+            prefs[KEY_LOGGING_ENABLED] ?: false
         }
 
     override suspend fun setLoggingEnabled(enabled: Boolean) {

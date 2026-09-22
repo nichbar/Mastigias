@@ -14,12 +14,19 @@ class LogManagerTest {
 
     @Before
     fun setUp() {
-        LogManager.resetForTesting()
+        LogManager.resetForTesting(enabled = true)
     }
 
     @After
     fun tearDown() {
+        LogManager.resetForTesting(enabled = false)
+    }
+
+    @Test
+    fun `resetForTesting defaults to disabled`() {
         LogManager.resetForTesting()
+        assertFalse(LogManager.isLogEnabled())
+        assertFalse(LogManager.isLogEnabledFlow.value)
     }
 
     @Test

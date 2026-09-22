@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import now.link.mastigias.core.common.AppDispatchers
 import now.link.mastigias.data.media.MediaStoreDataSource
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
@@ -20,13 +22,14 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val folderFilters: List<FolderFilter> = emptyList(),
     val hasManageMediaPermission: Boolean = false,
-    val isLoggingEnabled: Boolean = true
+    val isLoggingEnabled: Boolean = false
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
-    private val mediaStoreDataSource: MediaStoreDataSource
+    private val mediaStoreDataSource: MediaStoreDataSource,
+    private val dispatchers: AppDispatchers = AppDispatchers()
 ) : ViewModel() {
 
     private val _manageMediaGranted = MutableStateFlow(mediaStoreDataSource.hasManageMediaPermission())
@@ -44,7 +47,7 @@ class SettingsViewModel @Inject constructor(
             isLoggingEnabled = loggingEnabled
         )
     }.stateIn(
-        scope = viewModelScope,
+        scope = viewModelScope + dispatchers.main,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState(
             hasManageMediaPermission = mediaStoreDataSource.hasManageMediaPermission()
@@ -52,33 +55,33 @@ class SettingsViewModel @Inject constructor(
     )
 
     fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             preferencesRepository.setThemeMode(mode)
         }
     }
 
     fun setLoggingEnabled(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             preferencesRepository.setLoggingEnabled(enabled)
         }
     }
 
     fun addFolderFilter(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val current = uiState.value.folderFilters.filter { it.uri != filter.uri }
             preferencesRepository.setFolderFilters(current + filter)
         }
     }
 
     fun removeFolderFilter(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val current = uiState.value.folderFilters.filter { it.uri != filter.uri }
             preferencesRepository.setFolderFilters(current)
         }
     }
 
     fun toggleFilterMode(filter: FolderFilter) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.io) {
             val updated = uiState.value.folderFilters.map {
                 if (it.uri == filter.uri) {
                     it.copy(mode = if (it.isInclude) FilterMode.EXCLUDE else FilterMode.INCLUDE)

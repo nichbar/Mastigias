@@ -27,13 +27,13 @@ object LogManager : AppLogger {
     private val _logEntriesFlow = MutableStateFlow<List<LogEntry>>(emptyList())
     val logEntriesFlow: StateFlow<List<LogEntry>> = _logEntriesFlow.asStateFlow()
 
-    private val _isLogEnabledFlow = MutableStateFlow(true)
+    private val _isLogEnabledFlow = MutableStateFlow(false)
     val isLogEnabledFlow: StateFlow<Boolean> = _isLogEnabledFlow.asStateFlow()
 
     private var sharedPreferences: SharedPreferences? = null
 
     @Volatile
-    private var isLogEnabled: Boolean = true
+    private var isLogEnabled: Boolean = false
 
     /**
      * Initialize the LogManager with application context
@@ -41,9 +41,9 @@ object LogManager : AppLogger {
     fun initialize(context: Context) {
         try {
             sharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            isLogEnabled = sharedPreferences?.getBoolean(PREF_LOG_ENABLED, true) ?: true
+            isLogEnabled = sharedPreferences?.getBoolean(PREF_LOG_ENABLED, false) ?: false
         } catch (_: Exception) {
-            isLogEnabled = true
+            isLogEnabled = false
         }
         _isLogEnabledFlow.value = isLogEnabled
 
@@ -124,9 +124,9 @@ object LogManager : AppLogger {
     /**
      * Reset buffer completely for testing
      */
-    fun resetForTesting() {
-        isLogEnabled = true
-        _isLogEnabledFlow.value = true
+    fun resetForTesting(enabled: Boolean = false) {
+        isLogEnabled = enabled
+        _isLogEnabledFlow.value = enabled
         synchronized(logEntries) {
             logEntries.clear()
             _logEntriesFlow.value = emptyList()

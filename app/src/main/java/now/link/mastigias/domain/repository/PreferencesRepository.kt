@@ -19,7 +19,7 @@ interface PreferencesRepository {
     val viewModeFlow: Flow<LibraryViewMode> get() = flowOf(LibraryViewMode.TRACKS)
     val folderFiltersFlow: Flow<List<FolderFilter>>
     val themeModeFlow: Flow<ThemeMode> get() = flowOf(ThemeMode.SYSTEM)
-    val loggingEnabledFlow: Flow<Boolean> get() = flowOf(true)
+    val loggingEnabledFlow: Flow<Boolean> get() = flowOf(false)
 
     suspend fun setSortOrder(order: LibrarySortOrder)
     suspend fun setSortDirection(direction: SortDirection)

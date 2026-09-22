@@ -351,24 +351,8 @@ fun SettingsScreen(
 
                 HorizontalDivider()
 
-                // --- About ---
-                SettingsSectionHeader(title = "About")
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = "Mastigias",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = "High-performance native audio tag editor powered by TagLib C++ via JNI. Features 8-step Scoped Storage atomic write protocol, FLAC picture block encoding, multi-file batch editing, and SongSync lyrics integration.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                )
+                // --- Diagnostics ---
+                SettingsSectionHeader(title = "Diagnostics")
                 ListItem(
                     headlineContent = {
                         Text(
@@ -390,22 +374,45 @@ fun SettingsScreen(
                         )
                     }
                 )
+                if (uiState.isLoggingEnabled) {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = stringResource(id = R.string.view_logs),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = stringResource(id = R.string.in_app_diagnostic_buffer),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            onNavigateToLogs()
+                        }
+                    )
+                }
+
+                HorizontalDivider()
+
+                // --- About ---
+                SettingsSectionHeader(title = "About")
                 ListItem(
                     headlineContent = {
                         Text(
-                            text = stringResource(id = R.string.view_logs),
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "Mastigias",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                     },
                     supportingContent = {
                         Text(
-                            text = stringResource(id = R.string.in_app_diagnostic_buffer),
+                            text = "High-performance native audio tag editor powered by TagLib C++ via JNI. Features 8-step Scoped Storage atomic write protocol, FLAC picture block encoding, multi-file batch editing, and SongSync lyrics integration.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    },
-                    modifier = Modifier.clickable {
-                        onNavigateToLogs()
                     }
                 )
                 ListItem(
