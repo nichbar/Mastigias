@@ -4,8 +4,6 @@ project("mastigias-taglib")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(FetchContent)
-
 # Configure TagLib static build
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
 set(ENABLE_STATIC_RUNTIME ON CACHE BOOL "Static C++ runtime" FORCE)
@@ -14,11 +12,13 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "Disable examples" FORCE)
 set(BUILD_BINDINGS OFF CACHE BOOL "Disable bindings" FORCE)
 set(WITH_ZLIB ON CACHE BOOL "Enable zlib for compressed ID3 frames" FORCE)
 
-FetchContent_Declare(
-    taglib
-    URL https://taglib.org/releases/taglib-1.13.1.tar.gz
-)
-FetchContent_MakeAvailable(taglib)
+# TagLib is vendored as a git submodule at ./taglib (pinned tag v1.13.1) so
+# builds never fetch sources from the network (required for F-Droid).
+# The taglib_SOURCE_DIR/taglib_BINARY_DIR variables below keep the staged
+# include logic identical to the previous FetchContent-based setup.
+set(taglib_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/taglib")
+set(taglib_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/taglib")
+add_subdirectory(taglib)
 
 # TagLib organizes headers in format subdirectories (flac/, mpeg/id3v2/, etc.),
 # but consumers expect <taglib/*.h> flat includes as in standard installed layouts.
