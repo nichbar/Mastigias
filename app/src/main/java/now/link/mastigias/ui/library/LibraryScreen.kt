@@ -88,6 +88,16 @@ fun LibraryScreen(
     var showViewModeMenu by remember { mutableStateOf(false) }
     var showMultiAlbumWarningDialog by remember { mutableStateOf(false) }
 
+    val onEditSelected = {
+        if (viewModel.isMultiAlbumSelected()) {
+            showMultiAlbumWarningDialog = true
+        } else {
+            val ids = uiState.selectedTrackIds.toLongArray()
+            viewModel.clearSelection()
+            onNavigateToEditor(ids)
+        }
+    }
+
     BackHandler(enabled = uiState.isSelectionMode) {
         viewModel.clearSelection()
     }
@@ -147,17 +157,7 @@ fun LibraryScreen(
                             )
                         }
                         // Batch Edit
-                        IconButton(
-                            onClick = {
-                                if (viewModel.isMultiAlbumSelected()) {
-                                    showMultiAlbumWarningDialog = true
-                                } else {
-                                    val ids = uiState.selectedTrackIds.toLongArray()
-                                    viewModel.clearSelection()
-                                    onNavigateToEditor(ids)
-                                }
-                            }
-                        ) {
+                        IconButton(onClick = onEditSelected) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Batch edit"
@@ -209,7 +209,9 @@ fun LibraryScreen(
             LibraryFab(
                 lazyListState = lazyListState,
                 isSyncing = uiState.isSyncing,
-                onRefresh = { viewModel.sync() }
+                onRefresh = { viewModel.sync() },
+                hasSelection = uiState.isSelectionMode,
+                onEdit = onEditSelected
             )
         }
     ) { innerPadding ->

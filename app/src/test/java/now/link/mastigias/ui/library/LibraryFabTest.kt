@@ -1,6 +1,9 @@
 package now.link.mastigias.ui.library
 
+import now.link.mastigias.ui.library.components.LibraryFabMode
 import now.link.mastigias.ui.library.components.isListScrolled
+import now.link.mastigias.ui.library.components.resolveLibraryFabMode
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,5 +29,61 @@ class LibraryFabTest {
         assertTrue(isListScrolled(firstVisibleItemIndex = 1, firstVisibleItemScrollOffset = 0))
         assertTrue(isListScrolled(firstVisibleItemIndex = 1, firstVisibleItemScrollOffset = 20))
         assertTrue(isListScrolled(firstVisibleItemIndex = 15, firstVisibleItemScrollOffset = 100))
+    }
+
+    @Test
+    fun `resolveLibraryFabMode returns EDIT when items are selected at top of list`() {
+        assertEquals(
+            LibraryFabMode.EDIT,
+            resolveLibraryFabMode(
+                hasSelection = true,
+                firstVisibleItemIndex = 0,
+                firstVisibleItemScrollOffset = 0
+            )
+        )
+    }
+
+    @Test
+    fun `resolveLibraryFabMode returns EDIT when items are selected even if list is scrolled`() {
+        assertEquals(
+            LibraryFabMode.EDIT,
+            resolveLibraryFabMode(
+                hasSelection = true,
+                firstVisibleItemIndex = 5,
+                firstVisibleItemScrollOffset = 120
+            )
+        )
+    }
+
+    @Test
+    fun `resolveLibraryFabMode returns SCROLL_TO_TOP when no selection and list is scrolled`() {
+        assertEquals(
+            LibraryFabMode.SCROLL_TO_TOP,
+            resolveLibraryFabMode(
+                hasSelection = false,
+                firstVisibleItemIndex = 1,
+                firstVisibleItemScrollOffset = 0
+            )
+        )
+        assertEquals(
+            LibraryFabMode.SCROLL_TO_TOP,
+            resolveLibraryFabMode(
+                hasSelection = false,
+                firstVisibleItemIndex = 0,
+                firstVisibleItemScrollOffset = 10
+            )
+        )
+    }
+
+    @Test
+    fun `resolveLibraryFabMode returns REFRESH when no selection and list is at top`() {
+        assertEquals(
+            LibraryFabMode.REFRESH,
+            resolveLibraryFabMode(
+                hasSelection = false,
+                firstVisibleItemIndex = 0,
+                firstVisibleItemScrollOffset = 0
+            )
+        )
     }
 }

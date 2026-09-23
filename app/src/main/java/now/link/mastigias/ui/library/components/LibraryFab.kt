@@ -15,6 +15,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -28,22 +29,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import kotlinx.coroutines.launch
 
+enum class LibraryFabMode {
+    EDIT,
+    SCROLL_TO_TOP,
+    REFRESH
+}
+
 internal fun isListScrolled(firstVisibleItemIndex: Int, firstVisibleItemScrollOffset: Int): Boolean =
     firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0
+
+internal fun resolveLibraryFabMode(
+    hasSelection: Boolean,
+    firstVisibleItemIndex: Int,
+    firstVisibleItemScrollOffset: Int
+): LibraryFabMode = when {
+    hasSelection -> LibraryFabMode.EDIT
+    isListScrolled(firstVisibleItemIndex, firstVisibleItemScrollOffset) -> LibraryFabMode.SCROLL_TO_TOP
+    else -> LibraryFabMode.REFRESH
+}
 
 @Composable
 fun LibraryFab(
     lazyListState: LazyListState,
     isSyncing: Boolean,
     onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasSelection: Boolean = false,
+    onEdit: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val isScrolled by remember(lazyListState) {
+    val fabMode by remember(lazyListState, hasSelection) {
         derivedStateOf {
-            isListScrolled(
-                lazyListState.firstVisibleItemIndex,
-                lazyListState.firstVisibleItemScrollOffset
+            resolveLibraryFabMode(
+                hasSelection = hasSelection,
+                firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+                firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
             )
         }
     }
@@ -55,13 +75,17 @@ fun LibraryFab(
 
     FloatingActionButton(
         onClick = {
-            if (isScrolled) {
-                coroutineScope.launch {
-                    lazyListState.animateScrollToItem(0)
+            when (fabMode) {
+                LibraryFabMode.EDIT -> onEdit()
+                LibraryFabMode.SCROLL_TO_TOP -> {
+                    coroutineScope.launch {
+                        lazyListState.animateScrollToItem(0)
+                    }
                 }
-            } else {
-                if (!isSyncing) {
-                    onRefresh()
+                LibraryFabMode.REFRESH -> {
+                    if (!isSyncing) {
+                        onRefresh()
+                    }
                 }
             }
         },
@@ -71,7 +95,7 @@ fun LibraryFab(
         modifier = modifier
     ) {
         AnimatedContent(
-            targetState = isScrolled,
+            targetState = fabMode,
             transitionSpec = {
                 (fadeIn(animationSpec = enterEffects) + scaleIn(animationSpec = enterSpatial))
                     .togetherWith(
@@ -79,15 +103,24 @@ fun LibraryFab(
                     )
             },
             label = "LibraryFabTransition"
-        ) { scrolled ->
-            if (scrolled) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Scroll to top",
-                    modifier = Modifier.rotate(90f)
-                )
-            } else {
-                RefreshFabIcon(isSyncing = isSyncing)
+        ) { mode ->
+            when (mode) {
+                LibraryFabMode.EDIT -> {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit"
+                    )
+                }
+                LibraryFabMode.SCROLL_TO_TOP -> {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Scroll to top",
+                        modifier = Modifier.rotate(90f)
+                    )
+                }
+                LibraryFabMode.REFRESH -> {
+                    RefreshFabIcon(isSyncing = isSyncing)
+                }
             }
         }
     }
