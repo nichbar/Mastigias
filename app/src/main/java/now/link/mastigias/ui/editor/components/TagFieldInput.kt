@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -17,6 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import now.link.mastigias.domain.model.TagCategory
@@ -33,6 +37,9 @@ fun TagFieldInput(
     onDeleteField: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     val isNumberField = field == TagField.TRACK_NUMBER ||
         field == TagField.TRACK_TOTAL ||
         field == TagField.DISC_NUMBER ||
@@ -83,7 +90,14 @@ fun TagFieldInput(
                 }
             } else null,
             keyboardOptions = KeyboardOptions(
-                keyboardType = if (isNumberField) KeyboardType.Number else KeyboardType.Text
+                keyboardType = if (isNumberField) KeyboardType.Number else KeyboardType.Text,
+                imeAction = if (field == TagField.COMMENT) ImeAction.Default else ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                }
             ),
             singleLine = field.category != TagCategory.LYRICS && field != TagField.COMMENT,
             maxLines = if (field == TagField.COMMENT) 3 else 1,

@@ -49,7 +49,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
@@ -69,6 +71,8 @@ fun EditorScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -90,6 +94,8 @@ fun EditorScreen(
     val safeNavigateBack: () -> Unit = {
         if (!hasNavigatedBack) {
             hasNavigatedBack = true
+            keyboardController?.hide()
+            focusManager.clearFocus()
             onNavigateBack()
         }
     }
@@ -120,6 +126,8 @@ fun EditorScreen(
                     consentLauncher.launch(request)
                 }
                 is EditorUiEvent.NavigateToBatchEditor -> {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
                     if (uiState.isDirty) {
                         pendingBatchTrackIds = event.trackIds
                     } else {
@@ -133,6 +141,8 @@ fun EditorScreen(
     // Intercept back navigation if dirty; disable back action while saving is in progress
     val handleBackPress: () -> Unit = {
         if (!uiState.isSaving && !hasNavigatedBack) {
+            keyboardController?.hide()
+            focusManager.clearFocus()
             if (uiState.isDirty) {
                 showDiscardConfirmation = true
             } else {
@@ -188,6 +198,8 @@ fun EditorScreen(
                 FloatingActionButton(
                     onClick = {
                         if (!uiState.isSaving) {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
                             viewModel.saveMetadata()
                         }
                     },

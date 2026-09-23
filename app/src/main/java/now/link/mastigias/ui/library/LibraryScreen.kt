@@ -65,7 +65,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -93,6 +95,13 @@ fun LibraryScreen(
     val folderFilters by viewModel.folderFilters.collectAsStateWithLifecycle()
     val lazyListState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val clearFocusAndKeyboard: () -> Unit = {
+        keyboardController?.hide()
+        focusManager.clearFocus()
+    }
 
     val fabMode by remember(lazyListState, uiState.isSelectionMode) {
         derivedStateOf {
@@ -110,6 +119,7 @@ fun LibraryScreen(
     var showMultiAlbumWarningDialog by remember { mutableStateOf(false) }
 
     val onEditSelected = {
+        clearFocusAndKeyboard()
         if (viewModel.isMultiAlbumSelected()) {
             showMultiAlbumWarningDialog = true
         } else {
@@ -221,7 +231,10 @@ fun LibraryScreen(
                             }
                         }
                         // Settings button
-                        IconButton(onClick = onNavigateToSettings) {
+                        IconButton(onClick = {
+                            clearFocusAndKeyboard()
+                            onNavigateToSettings()
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings"
@@ -412,6 +425,7 @@ fun LibraryScreen(
                                     isExpanded = album.key in uiState.expandedAlbumKeys,
                                     onToggleExpand = { viewModel.toggleAlbumExpanded(album.key) },
                                     onTrackClick = { track ->
+                                        clearFocusAndKeyboard()
                                         if (uiState.isSelectionMode) {
                                             viewModel.toggleTrackSelection(track.id)
                                         } else {
@@ -419,17 +433,21 @@ fun LibraryScreen(
                                         }
                                     },
                                     onEditAlbumClick = { albumToEdit ->
+                                        clearFocusAndKeyboard()
                                         viewModel.editAlbum(albumToEdit, onNavigateToEditor)
                                     },
                                     selectedTrackIds = uiState.selectedTrackIds,
                                     isSelectionMode = uiState.isSelectionMode,
                                     onTrackLongClick = { track ->
+                                        clearFocusAndKeyboard()
                                         viewModel.toggleTrackSelection(track.id)
                                     },
                                     onToggleTrackSelect = { track ->
+                                        clearFocusAndKeyboard()
                                         viewModel.toggleTrackSelection(track.id)
                                     },
                                     onToggleAlbumSelect = { albumToSelect ->
+                                        clearFocusAndKeyboard()
                                         viewModel.toggleAlbumSelection(albumToSelect)
                                     }
                                 )
@@ -459,6 +477,7 @@ fun LibraryScreen(
                                 TrackListItem(
                                     track = track,
                                     onClick = {
+                                        clearFocusAndKeyboard()
                                         if (uiState.isSelectionMode) {
                                             viewModel.toggleTrackSelection(track.id)
                                         } else {
@@ -468,9 +487,11 @@ fun LibraryScreen(
                                     isSelected = track.id in uiState.selectedTrackIds,
                                     isSelectionMode = uiState.isSelectionMode,
                                     onLongClick = {
+                                        clearFocusAndKeyboard()
                                         viewModel.toggleTrackSelection(track.id)
                                     },
                                     onToggleSelect = {
+                                        clearFocusAndKeyboard()
                                         viewModel.toggleTrackSelection(track.id)
                                     }
                                 )
@@ -513,8 +534,10 @@ fun LibraryScreen(
             confirmButtonText = "Proceed",
             dismissButtonText = "Cancel",
             onConfirm = {
+                showMultiAlbumWarningDialog = false
                 val ids = uiState.selectedTrackIds.toLongArray()
                 viewModel.clearSelection()
+                clearFocusAndKeyboard()
                 onNavigateToEditor(ids)
             },
             onDismiss = { showMultiAlbumWarningDialog = false }
