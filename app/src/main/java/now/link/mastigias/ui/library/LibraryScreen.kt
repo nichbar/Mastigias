@@ -1,7 +1,14 @@
 package now.link.mastigias.ui.library
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +57,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +73,10 @@ import now.link.mastigias.ui.common.ConfirmationDialog
 import now.link.mastigias.ui.common.MastigiasSearchBar
 import now.link.mastigias.ui.library.components.AlbumAccordionItem
 import now.link.mastigias.ui.library.components.LibraryFab
+import now.link.mastigias.ui.library.components.LibraryFabMode
 import now.link.mastigias.ui.library.components.TrackListItem
+import now.link.mastigias.ui.library.components.resolveLibraryFabMode
+import now.link.mastigias.ui.library.components.shouldShowToolbarRefresh
 import now.link.mastigias.ui.library.dialogs.FolderFilterDialog
 import now.link.mastigias.ui.library.dialogs.SortDialog
 
@@ -82,6 +93,16 @@ fun LibraryScreen(
     val folderFilters by viewModel.folderFilters.collectAsStateWithLifecycle()
     val lazyListState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val fabMode by remember(lazyListState, uiState.isSelectionMode) {
+        derivedStateOf {
+            resolveLibraryFabMode(
+                hasSelection = uiState.isSelectionMode,
+                firstVisibleItemIndex = lazyListState.firstVisibleItemIndex,
+                firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
+            )
+        }
+    }
 
     var showSortDialog by remember { mutableStateOf(false) }
     var showFolderDialog by remember { mutableStateOf(false) }
@@ -179,15 +200,25 @@ fun LibraryScreen(
                         )
                     },
                     actions = {
-                        // Sync button
-                        IconButton(
-                            onClick = { viewModel.sync() },
-                            enabled = !uiState.isSyncing
+                        // Sync button (hidden when FAB acts as refresh button)
+                        AnimatedVisibility(
+                            visible = shouldShowToolbarRefresh(fabMode),
+                            enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                                scaleIn(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                                expandHorizontally(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()),
+                            exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()) +
+                                scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
+                                shrinkHorizontally(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Scan media"
-                            )
+                            IconButton(
+                                onClick = { viewModel.sync() },
+                                enabled = !uiState.isSyncing
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Scan media"
+                                )
+                            }
                         }
                         // Settings button
                         IconButton(onClick = onNavigateToSettings) {
@@ -211,6 +242,7 @@ fun LibraryScreen(
                 isSyncing = uiState.isSyncing,
                 onRefresh = { viewModel.sync() },
                 hasSelection = uiState.isSelectionMode,
+                fabMode = fabMode,
                 onEdit = onEditSelected
             )
         }

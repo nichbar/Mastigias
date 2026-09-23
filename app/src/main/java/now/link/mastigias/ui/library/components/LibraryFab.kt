@@ -48,6 +48,9 @@ internal fun resolveLibraryFabMode(
     else -> LibraryFabMode.REFRESH
 }
 
+internal fun shouldShowToolbarRefresh(fabMode: LibraryFabMode): Boolean =
+    fabMode != LibraryFabMode.REFRESH
+
 @Composable
 fun LibraryFab(
     lazyListState: LazyListState,
@@ -55,10 +58,11 @@ fun LibraryFab(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     hasSelection: Boolean = false,
+    fabMode: LibraryFabMode? = null,
     onEdit: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val fabMode by remember(lazyListState, hasSelection) {
+    val resolvedFabMode = fabMode ?: remember(lazyListState, hasSelection) {
         derivedStateOf {
             resolveLibraryFabMode(
                 hasSelection = hasSelection,
@@ -66,7 +70,7 @@ fun LibraryFab(
                 firstVisibleItemScrollOffset = lazyListState.firstVisibleItemScrollOffset
             )
         }
-    }
+    }.value
 
     val enterEffects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val enterSpatial = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
@@ -75,7 +79,7 @@ fun LibraryFab(
 
     FloatingActionButton(
         onClick = {
-            when (fabMode) {
+            when (resolvedFabMode) {
                 LibraryFabMode.EDIT -> onEdit()
                 LibraryFabMode.SCROLL_TO_TOP -> {
                     coroutineScope.launch {
@@ -95,7 +99,7 @@ fun LibraryFab(
         modifier = modifier
     ) {
         AnimatedContent(
-            targetState = fabMode,
+            targetState = resolvedFabMode,
             transitionSpec = {
                 (fadeIn(animationSpec = enterEffects) + scaleIn(animationSpec = enterSpatial))
                     .togetherWith(

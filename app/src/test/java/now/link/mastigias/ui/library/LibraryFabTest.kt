@@ -3,6 +3,7 @@ package now.link.mastigias.ui.library
 import now.link.mastigias.ui.library.components.LibraryFabMode
 import now.link.mastigias.ui.library.components.isListScrolled
 import now.link.mastigias.ui.library.components.resolveLibraryFabMode
+import now.link.mastigias.ui.library.components.shouldShowToolbarRefresh
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -85,5 +86,20 @@ class LibraryFabTest {
                 firstVisibleItemScrollOffset = 0
             )
         )
+    }
+
+    @Test
+    fun `shouldShowToolbarRefresh returns false when FAB is in REFRESH mode`() {
+        assertFalse(shouldShowToolbarRefresh(LibraryFabMode.REFRESH))
+    }
+
+    @Test
+    fun `shouldShowToolbarRefresh returns true when FAB is in SCROLL_TO_TOP mode`() {
+        assertTrue(shouldShowToolbarRefresh(LibraryFabMode.SCROLL_TO_TOP))
+    }
+
+    @Test
+    fun `shouldShowToolbarRefresh returns true when FAB is in EDIT mode`() {
+        assertTrue(shouldShowToolbarRefresh(LibraryFabMode.EDIT))
     }
 }
