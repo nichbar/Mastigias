@@ -20,9 +20,9 @@ Some tracks on my Android device used the `album-artist` field instead of `artis
 
 ## Screenshots
 
-| Library | Tag Editor |
-|:---:|:---:|
-| <img src="docs/screenshots/library.jpg" width="320" alt="Library" /> | <img src="docs/screenshots/editor.png" width="320" alt="Tag Editor" /> |
+| Tracks (Light) | Tracks (Dark) | Album | Batch Editor | Lyrics Editor |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/light.jpg" width="180" alt="Tracks (Light)" /> | <img src="docs/screenshots/dark.jpg" width="180" alt="Albums (Dark)" /> | <img src="docs/screenshots/album.jpg" width="180" alt="Album Details" /> | <img src="docs/screenshots/batch.jpg" width="180" alt="Batch Editor" /> | <img src="docs/screenshots/lyrics.jpg" width="180" alt="Lyrics Editor" /> |
 
 ## Features
 
