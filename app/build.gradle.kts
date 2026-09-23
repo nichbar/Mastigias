@@ -71,11 +71,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val releaseSigning = signingConfigs.getByName("release")
-            signingConfig = if (keystorePropertiesFile.exists() && releaseSigning.storeFile?.exists() == true) {
-                releaseSigning
-            } else {
-                signingConfigs.getByName("debug")
+            // Apply release signing only when local key.properties + keystore exist.
+            // F-Droid strips signingConfigs before building, so this lookup must never
+            // run there — an unsigned release APK is exactly what F-Droid expects.
+            if (keystorePropertiesFile.exists()) {
+                val releaseSigning = signingConfigs.getByName("release")
+                if (releaseSigning.storeFile?.exists() == true) {
+                    signingConfig = releaseSigning
+                }
             }
         }
         debug {
