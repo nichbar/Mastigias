@@ -65,8 +65,11 @@ class LibraryViewModel @Inject constructor(
 
     private val trackCache = ConcurrentHashMap<Long, Track>()
 
+    private val debouncedSearchQueryFlow: Flow<String> = _searchQuery
+        .debounce { query -> if (query.isBlank()) 0L else 200L }
+
     private val filterAndSortParamsFlow: Flow<FilterAndSortParams> = combine(
-        _searchQuery,
+        debouncedSearchQueryFlow,
         _isUntaggedFilterActive,
         preferencesRepository.viewModeFlow,
         preferencesRepository.sortOrderFlow,
@@ -76,7 +79,6 @@ class LibraryViewModel @Inject constructor(
     }
 
     private val contentFlow: Flow<Pair<FilterAndSortParams, Pair<List<Track>, List<Album>>>> = filterAndSortParamsFlow
-        .debounce { params -> if (params.query.isBlank()) 0L else 200L }
         .flatMapLatest { params ->
             if (params.viewMode == LibraryViewMode.ALBUMS) {
                 getAlbumsUseCase(
@@ -115,16 +117,17 @@ class LibraryViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<LibraryUiState> = combine(
+        _searchQuery,
         contentFlow,
         syncStatusFlow,
         _selectedTrackIds,
         _expandedAlbumKeys
-    ) { (filterParams, content), status, selectedTrackIds, expandedAlbumKeys ->
+    ) { currentQuery, (filterParams, content), status, selectedTrackIds, expandedAlbumKeys ->
         val (tracks, albums) = content
         LibraryUiState(
             tracks = tracks,
             albums = albums,
-            searchQuery = filterParams.query,
+            searchQuery = currentQuery,
             viewMode = filterParams.viewMode,
             sortOrder = filterParams.sortOrder,
             sortDirection = filterParams.sortDirection,

@@ -350,4 +350,34 @@ class LibraryViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun `onSearchQueryChanged updates searchQuery in uiState immediately`() = runBlocking {
+        val viewModel = createViewModel()
+        val job = launch(Dispatchers.Unconfined) { viewModel.uiState.collect {} }
+
+        assertEquals("", viewModel.uiState.value.searchQuery)
+
+        viewModel.onSearchQueryChanged("test")
+        assertEquals("test", viewModel.uiState.value.searchQuery)
+
+        viewModel.onSearchQueryChanged("test query")
+        assertEquals("test query", viewModel.uiState.value.searchQuery)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `onClearSearch resets searchQuery in uiState immediately`() = runBlocking {
+        val viewModel = createViewModel()
+        val job = launch(Dispatchers.Unconfined) { viewModel.uiState.collect {} }
+
+        viewModel.onSearchQueryChanged("something")
+        assertEquals("something", viewModel.uiState.value.searchQuery)
+
+        viewModel.onClearSearch()
+        assertEquals("", viewModel.uiState.value.searchQuery)
+
+        job.cancel()
+    }
 }
