@@ -1,0 +1,2 @@
+- Bundle TagLib source as a git submodule instead of downloading it at build time (F-Droid support)
+- No user-facing changes
