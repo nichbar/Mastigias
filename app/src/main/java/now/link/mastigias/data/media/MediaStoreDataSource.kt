@@ -3,13 +3,17 @@ package now.link.mastigias.data.media
 import android.app.PendingIntent
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.content.IntentSender
+import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.provider.MediaStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
@@ -56,20 +60,48 @@ open class MediaStoreDataSource {
 
     /**
      * Creates a batch write consent request for Android 11+ (API 30+).
-     * On API 31+, if MediaStore.canManageMedia(context) is granted, returns null (no dialog required).
-     * On API < 30, returns null because writes are permitted directly via WRITE_EXTERNAL_STORAGE.
+     *
+     * In Android Scoped Storage (API 30+), modifying media files owned by other apps
+     * requires write access granted via [MediaStore.createWriteRequest].
+     *
+     * When [MediaStore.canManageMedia] is granted (API 31+), the system's PermissionActivity
+     * automatically suppresses the confirmation dialog and silently approves the request.
+     * We must still initiate the write request so that Android grants the URI write permission.
+     *
+     * Files that already have write permission granted (or when All Files Access is active)
+     * are filtered out to avoid redundant requests.
      */
     fun createBatchWriteRequest(trackIds: List<Long>): IntentSender? {
         val ctx = context ?: return null
+        if (trackIds.isEmpty()) return null
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // API 31+ Manage Media check: suppress per-save system dialog if granted
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(ctx)) {
-                LogManager.d(TAG, "canManageMedia granted, batch write request dialog bypassed for ${trackIds.size} tracks")
+            // All Files Access (MANAGE_EXTERNAL_STORAGE) bypasses Scoped Storage write restrictions
+            if (Environment.isExternalStorageManager()) {
+                LogManager.d(TAG, "All Files Access (isExternalStorageManager) granted, consent bypassed")
                 return null
             }
-            LogManager.d(TAG, "Creating system batch write consent request for ${trackIds.size} tracks")
-            val uris = trackIds.map { getTrackUri(it) }
-            val pendingIntent: PendingIntent = MediaStore.createWriteRequest(ctx.contentResolver, uris)
+
+            // Filter out tracks that already have write permission granted
+            val urisToRequest = trackIds.map { getTrackUri(it) }.filter { uri ->
+                ctx.checkUriPermission(
+                    uri,
+                    Process.myPid(),
+                    Process.myUid(),
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                ) != PackageManager.PERMISSION_GRANTED
+            }
+
+            if (urisToRequest.isEmpty()) {
+                LogManager.d(TAG, "Write permission already held for all ${trackIds.size} tracks")
+                return null
+            }
+
+            LogManager.d(
+                TAG,
+                "Requesting write consent for ${urisToRequest.size} of ${trackIds.size} tracks (canManageMedia=${hasManageMediaPermission()})"
+            )
+            val pendingIntent: PendingIntent = MediaStore.createWriteRequest(ctx.contentResolver, urisToRequest)
             return pendingIntent.intentSender
         }
         return null
