@@ -256,4 +256,112 @@ class GetLibraryTracksUseCaseTest {
         assertEquals(2, tracks.size)
         assertTrue(tracks.none { it.path.contains("FolderB") })
     }
+
+    @Test
+    fun `filters tracks by SAF tree URI with primary volume and relative path`() = runBlocking {
+        // This mirrors SAF OpenDocumentTree: uri = content://.../primary%3AMusic%2FFolderA, path = "Music/FolderA"
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic%2FFolderA",
+                    path = "Music/FolderA",
+                    mode = FilterMode.INCLUDE
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+
+        assertEquals(1, tracks.size)
+        assertEquals("Alpha", tracks[0].title)
+    }
+
+    @Test
+    fun `filters tracks by SAF tree URI with primary volume parent directory`() = runBlocking {
+        // Including "Music" should include tracks in both FolderA and FolderB under Music
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+                    path = "Music",
+                    mode = FilterMode.INCLUDE
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+
+        assertEquals(2, tracks.size)
+        assertTrue(tracks.any { it.title == "Alpha" })
+        assertTrue(tracks.any { it.title == "Beta" })
+        assertTrue(tracks.none { it.title == "Gamma" }) // Gamma is in /storage/emulated/0/Downloads/
+    }
+
+    @Test
+    fun `filters tracks by SAF tree URI with primary root includes all primary storage tracks`() = runBlocking {
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3A",
+                    path = "",
+                    mode = FilterMode.INCLUDE
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+
+        assertEquals(3, tracks.size)
+    }
+
+    @Test
+    fun `filters tracks by relative path fallback when URI is non-SAF`() = runBlocking {
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "custom_uri",
+                    path = "Music/FolderA",
+                    mode = FilterMode.INCLUDE
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+
+        assertEquals(1, tracks.size)
+        assertEquals("Alpha", tracks[0].title)
+    }
+
+    @Test
+    fun `excludes tracks by SAF tree URI`() = runBlocking {
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic%2FFolderB",
+                    path = "Music/FolderB",
+                    mode = FilterMode.EXCLUDE
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+
+        assertEquals(2, tracks.size)
+        assertTrue(tracks.none { it.title == "Beta" })
+    }
+
+    @Test
+    fun `FolderFilter displayName returns expected values`() {
+        val folderFilter = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+            path = "Music"
+        )
+        assertEquals("Music", folderFilter.displayName)
+
+        val rootFilter = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/primary%3A",
+            path = ""
+        )
+        assertEquals("Internal Storage", rootFilter.displayName)
+    }
 }

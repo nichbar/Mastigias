@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
+import java.net.URLDecoder
 
 @Composable
 fun FolderFilterDialog(
@@ -63,11 +64,15 @@ fun FolderFilterDialog(
                 // Ignore if unable to take persistable permission
             }
 
-            val decodedPath = uri.path ?: uri.toString()
+            val rawPath = uri.path ?: uri.toString()
+            val decodedPath = runCatching {
+                URLDecoder.decode(rawPath, "UTF-8")
+            }.getOrDefault(rawPath)
+
             val simplifiedPath = if (decodedPath.contains(":")) {
-                decodedPath.substringAfter(":")
+                decodedPath.substringAfterLast(":").trim('/')
             } else {
-                decodedPath
+                decodedPath.substringAfterLast('/').trim('/')
             }
 
             val newFilter = FolderFilter(
@@ -179,7 +184,7 @@ private fun FolderFilterRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = filter.path.ifBlank { filter.uri },
+                    text = filter.displayName,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

@@ -67,6 +67,7 @@ import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
 import now.link.mastigias.domain.repository.ThemeMode
 import now.link.mastigias.ui.common.AppLayoutBody
+import java.net.URLDecoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,11 +108,15 @@ fun SettingsScreen(
                 // Ignore if unable to take persistable permission
             }
 
-            val decodedPath = uri.path ?: uri.toString()
+            val rawPath = uri.path ?: uri.toString()
+            val decodedPath = runCatching {
+                URLDecoder.decode(rawPath, "UTF-8")
+            }.getOrDefault(rawPath)
+
             val simplifiedPath = if (decodedPath.contains(":")) {
-                decodedPath.substringAfter(":")
+                decodedPath.substringAfterLast(":").trim('/')
             } else {
-                decodedPath
+                decodedPath.substringAfterLast('/').trim('/')
             }
 
             val newFilter = FolderFilter(
@@ -306,7 +311,7 @@ fun SettingsScreen(
                         ListItem(
                             headlineContent = {
                                 Text(
-                                    text = filter.path.ifBlank { filter.uri },
+                                    text = filter.displayName,
                                     style = MaterialTheme.typography.bodyMedium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
