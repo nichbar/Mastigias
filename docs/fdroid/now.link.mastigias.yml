@@ -34,15 +34,18 @@ RepoType: git
 Repo: https://github.com/nichbar/Mastigias.git
 
 Builds:
-  - versionName: 1.2.2
-    versionCode: 5
-    commit: v1.2.2
+  - versionName: 1.2.3
+    versionCode: 6
+    commit: v1.2.3
     subdir: app
+    submodules: true
+    scanignore:
+      - app/src/main/cpp/taglib/tests/data/no-extension
     gradle:
       - yes
     ndk: 26.1.10909125
 
 AutoUpdateMode: Version v%v
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+$
-CurrentVersion: 1.2.2
-CurrentVersionCode: 5
+CurrentVersion: 1.2.3
+CurrentVersionCode: 6
