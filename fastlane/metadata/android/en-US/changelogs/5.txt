@@ -1,0 +1,4 @@
+- Decoupled search input responsiveness from query debounce
+- Improved folder filter path matching for SAF tree URIs and relative paths
+- Polished button styling in LRCLIB lyrics dialog
+- Build configuration updates for F-Droid support
