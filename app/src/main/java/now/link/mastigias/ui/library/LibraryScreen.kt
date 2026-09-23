@@ -106,10 +106,6 @@ fun LibraryScreen(
     var lastSortDirection by remember { mutableStateOf(uiState.sortDirection) }
     var lastViewMode by remember { mutableStateOf(uiState.viewMode) }
 
-    LaunchedEffect(uiState.sortOrder, uiState.sortDirection, uiState.viewMode) {
-        lazyListState.scrollToItem(0)
-    }
-
     LaunchedEffect(uiState.tracks, uiState.albums) {
         if (uiState.sortOrder != lastSortOrder ||
             uiState.sortDirection != lastSortDirection ||
