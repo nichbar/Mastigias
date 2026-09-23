@@ -1,0 +1,4 @@
+- Edit FAB appears when items are selected
+- Toolbar refresh button hidden when the FAB acts as refresh
+- Tracklist scroll position preserved when returning from the editor
+- Keyboard dismissed and focus cleared on save and back navigation

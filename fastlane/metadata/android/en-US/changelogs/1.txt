@@ -1,0 +1,8 @@
+Initial release of Mastigias:
+
+- Native TagLib C++ tag editing engine (MP3, FLAC, M4A, OGG, WAV, AIFF, WMA)
+- Single-track and whole-album batch tag editing
+- Embedded album artwork support
+- Full-text library search with untagged filter
+- Material 3 Expressive design with predictive back navigation
+- Dark/light theme support

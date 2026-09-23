@@ -1,0 +1,2 @@
+- Lyrics editor with LRCLIB search: fetch and select synchronized (.lrc) and plain lyrics candidates
+- True edge-to-edge navigation with fixed Scaffold insets

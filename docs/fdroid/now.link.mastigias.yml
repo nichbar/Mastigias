@@ -1,0 +1,48 @@
+# Draft F-Droid build metadata for https://gitlab.com/fdroid/fdroiddata
+# Copy this file to: fdroiddata/metadata/now.link.mastigias.yml
+# Then test locally with: fdroid build now.link.mastigias
+
+Categories:
+  - Multimedia
+License: AGPL-3.0-only
+AuthorName: nichbar
+AuthorEmail: ''
+WebSite: https://github.com/nichbar/Mastigias
+SourceCode: https://github.com/nichbar/Mastigias
+IssueTracker: https://github.com/nichbar/Mastigias/issues
+Changelog: https://github.com/nichbar/Mastigias/releases
+
+AutoName: Mastigias
+Summary: Batch music tag editor powered by native TagLib
+Description: |
+    Mastigias is a simple, open-source Android music tag editor built on the
+    native TagLib C++ engine via JNI. Edit a single track, a multi-track
+    selection, or an entire album at once.
+
+    Features:
+
+    * High-performance native engine: C++ TagLib 1.13.1 via JNI, supporting MP3,
+    FLAC, M4A/MP4, OGG/Opus/Vorbis, WAV, AIFF, and WMA.
+    * Batch & single file editing of track metadata.
+    * Embedded artwork: embed and replace album art.
+    * Lyrics integration with LRCLIB search for synchronized (.lrc) and plain
+    lyrics.
+    * Fast full-text library search (SQLite FTS4).
+    * No ads, no tracking, no accounts.
+
+RepoType: git
+Repo: https://github.com/nichbar/Mastigias.git
+
+Builds:
+  - versionName: 1.2.1
+    versionCode: 4
+    commit: v1.2.1
+    subdir: app
+    gradle:
+      - yes
+    ndk: 26.1.10909125
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags ^v\d+\.\d+\.\d+$
+CurrentVersion: 1.2.1
+CurrentVersionCode: 4

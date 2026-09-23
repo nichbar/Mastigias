@@ -1,0 +1,4 @@
+- Multi-track batch editing with cross-album override warning
+- Date-based sorting options and fixed list scroll anchoring
+- Album accordion expansion now persists while scrolling
+- Diagnostic logs are now disabled by default, isolated in their own settings section

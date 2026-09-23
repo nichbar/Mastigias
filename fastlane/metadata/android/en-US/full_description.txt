@@ -1,0 +1,13 @@
+<p>Mastigias is a simple, open-source Android music tag editor built on the native TagLib C++ engine via JNI. It just works — edit a single track, a multi-track selection, or an entire album at once.</p>
+
+<p><b>Features:</b></p>
+<ul>
+<li><b>High-performance native engine:</b> C++ TagLib 1.13.1 via JNI, supporting MP3, FLAC, M4A/MP4, OGG/Opus/Vorbis, WAV, AIFF, and WMA.</li>
+<li><b>Batch &amp; single file editing:</b> edit individual tracks, multi-track selections, or entire albums simultaneously.</li>
+<li><b>Embedded artwork:</b> embed and replace album art, with bounds decoding and downsampling.</li>
+<li><b>Lyrics integration:</b> multiline lyrics editor with direct LRCLIB search to fetch and select synchronized (.lrc) and plain lyrics.</li>
+<li><b>Full-text search:</b> fast local library search backed by SQLite FTS4.</li>
+<li><b>Modern stack:</b> Jetpack Compose, Material 3, and clean architecture — no ads, no tracking, no accounts.</li>
+</ul>
+
+<p>Mastigias is free and open source software licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only). Source code: https://github.com/nichbar/Mastigias</p>
