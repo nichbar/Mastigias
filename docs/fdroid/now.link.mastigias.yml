@@ -1,6 +1,10 @@
 # Draft F-Droid build metadata for https://gitlab.com/fdroid/fdroiddata
 # Copy this file to: fdroiddata/metadata/now.link.mastigias.yml
-# Then test locally with: fdroid build now.link.mastigias
+# Then test locally with: fdroid rewritemeta now.link.mastigias && fdroid build now.link.mastigias
+#
+# Reproducible builds: Binaries + AllowedAPKSigningKeys pin the upstream
+# GitHub release APK (universal) and the release signing certificate.
+# AllowedAPKSigningKeys SHA-256 = release keystore cert (see `apksigner verify --print-certs`).
 
 Categories:
   - Multimedia
@@ -15,6 +19,7 @@ AutoName: Mastigias
 
 RepoType: git
 Repo: https://github.com/nichbar/Mastigias.git
+Binaries: https://github.com/nichbar/Mastigias/releases/download/v%v/Mastigias.v%v-universal.apk
 
 Builds:
   - versionName: 1.2.3
@@ -22,13 +27,15 @@ Builds:
     commit: 048d3e89555dd3f2fee1c3f0ca6798869f94dc33
     subdir: app
     submodules: true
-    scandelete:
-      - app/src/main/cpp/taglib/tests/data
     gradle:
       - yes
+    scandelete:
+      - app/src/main/cpp/taglib/tests/data
     ndk: 26.1.10909125
 
-AutoUpdateMode: Version v%v
+AllowedAPKSigningKeys: f38f18cd8b6eabfe5434cb0278b6c23029c04f34977e73868c07f82bb590e5f1
+
+AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+$
 CurrentVersion: 1.2.3
 CurrentVersionCode: 6

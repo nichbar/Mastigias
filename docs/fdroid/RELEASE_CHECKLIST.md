@@ -50,3 +50,7 @@ Normally never. Open an MR against `metadata/now.link.mastigias.yml`
   (non-free, tracking, Maven Central-only blobs)
 - [ ] Gradle module/task layout changed (e.g. `subdir` or build command)
 - [ ] Tag naming scheme changed (would break `UpdateCheckMode: Tags ^v\d+\.\d+\.\d+$`)
+- [ ] Release asset naming scheme changed (would break
+  `Binaries: .../download/v%v/Mastigias.v%v-universal.apk`)
+- [ ] Release signing key rotated → update `AllowedAPKSigningKeys`
+  (get it from `apksigner verify --print-certs Mastigias.v<version>-universal.apk`)
