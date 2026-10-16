@@ -1,0 +1,3 @@
+- Option to toggle recursive scanning vs direct files only for music folders
+- Streamlined music folder filter dialog
+- Fixed Scoped Storage write consent requests when manage media permission is granted
