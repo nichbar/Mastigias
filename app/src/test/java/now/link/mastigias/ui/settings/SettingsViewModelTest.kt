@@ -159,6 +159,12 @@ class SettingsViewModelTest {
         viewModel.toggleFilterMode(filter)
         assertEquals(FilterMode.EXCLUDE, viewModel.uiState.value.folderFilters[0].mode)
 
+        viewModel.toggleFilterRecursive(viewModel.uiState.value.folderFilters[0])
+        assertFalse(viewModel.uiState.value.folderFilters[0].recursive)
+
+        viewModel.toggleFilterRecursive(viewModel.uiState.value.folderFilters[0])
+        assertTrue(viewModel.uiState.value.folderFilters[0].recursive)
+
         viewModel.removeFolderFilter(filter)
         assertTrue(viewModel.uiState.value.folderFilters.isEmpty())
 

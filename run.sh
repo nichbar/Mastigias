@@ -3,6 +3,11 @@ set -e
 
 cd "$(dirname "$0")"
 
+if [ ! -f "app/src/main/cpp/taglib/CMakeLists.txt" ]; then
+  echo "Initializing git submodules (taglib)..."
+  git submodule update --init --recursive
+fi
+
 DEVICE=$(adb devices 2>/dev/null | grep -m1 'device$' | awk '{print $1}')
 if [ -z "$DEVICE" ]; then
   echo "No Android device connected"

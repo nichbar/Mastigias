@@ -380,4 +380,36 @@ class LibraryViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun `folder filter operations update folderFilters StateFlow`() = runBlocking {
+        val viewModel = createViewModel()
+        val job = launch(Dispatchers.Unconfined) { viewModel.folderFilters.collect {} }
+
+        val filter = FolderFilter(
+            uri = "content://music_tree",
+            path = "Music",
+            mode = FilterMode.INCLUDE,
+            recursive = true
+        )
+
+        viewModel.addFolderFilter(filter)
+        assertEquals(1, viewModel.folderFilters.value.size)
+        assertTrue(viewModel.folderFilters.value[0].isInclude)
+        assertTrue(viewModel.folderFilters.value[0].recursive)
+
+        viewModel.toggleFolderFilterMode(viewModel.folderFilters.value[0])
+        assertEquals(FilterMode.EXCLUDE, viewModel.folderFilters.value[0].mode)
+
+        viewModel.toggleFolderFilterRecursive(viewModel.folderFilters.value[0])
+        assertFalse(viewModel.folderFilters.value[0].recursive)
+
+        viewModel.toggleFolderFilterRecursive(viewModel.folderFilters.value[0])
+        assertTrue(viewModel.folderFilters.value[0].recursive)
+
+        viewModel.removeFolderFilter(filter)
+        assertTrue(viewModel.folderFilters.value.isEmpty())
+
+        job.cancel()
+    }
 }

@@ -93,6 +93,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun toggleFilterRecursive(filter: FolderFilter) {
+        viewModelScope.launch(dispatchers.io) {
+            val updated = uiState.value.folderFilters.map {
+                if (it.uri == filter.uri) {
+                    it.copy(recursive = !it.recursive)
+                } else {
+                    it
+                }
+            }
+            preferencesRepository.setFolderFilters(updated)
+        }
+    }
+
     fun refreshPermissions() {
         _manageMediaGranted.value = mediaStoreDataSource.hasManageMediaPermission()
     }

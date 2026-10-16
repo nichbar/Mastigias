@@ -1,6 +1,8 @@
 package now.link.mastigias.data.datastore
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -16,6 +18,7 @@ import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -133,6 +136,58 @@ class PreferencesRepositoryImplTest {
 
         repository.setFolderFilters(emptyList())
         assertTrue(repository.folderFiltersFlow.first().isEmpty())
+    }
+
+    @Test
+    fun `setFolderFilters persists recursive flag accurately`() = runBlocking {
+        val filters = listOf(
+            FolderFilter(
+                uri = "content://music",
+                path = "Music",
+                mode = FilterMode.INCLUDE,
+                recursive = false
+            ),
+            FolderFilter(
+                uri = "content://podcasts",
+                path = "Podcasts",
+                mode = FilterMode.EXCLUDE,
+                recursive = true
+            )
+        )
+        repository.setFolderFilters(filters)
+
+        val retrieved = repository.folderFiltersFlow.first()
+        assertEquals(2, retrieved.size)
+        assertFalse(retrieved[0].recursive)
+        assertTrue(retrieved[1].recursive)
+    }
+
+    @Test
+    fun `folderFiltersFlow deserializes legacy JSON without recursive key defaulting to true`() = runBlocking {
+        val legacyJson = """[{"uri":"legacy_uri","path":"legacy_path","mode":"INCLUDE"}]"""
+        val legacyTempFile = File.createTempFile("legacy_prefs_", ".preferences_pb")
+        val legacyScope = CoroutineScope(Dispatchers.IO + Job())
+        try {
+            val legacyDataStore = PreferenceDataStoreFactory.create(
+                scope = legacyScope,
+                produceFile = { legacyTempFile }
+            )
+            legacyDataStore.edit { prefs ->
+                prefs[stringPreferencesKey("folder_filters")] = legacyJson
+            }
+
+            val legacyRepo = PreferencesRepositoryImpl(legacyDataStore)
+            val retrieved = legacyRepo.folderFiltersFlow.first()
+            assertEquals(1, retrieved.size)
+            assertEquals("legacy_uri", retrieved[0].uri)
+            assertEquals("legacy_path", retrieved[0].path)
+            assertTrue(retrieved[0].recursive)
+        } finally {
+            legacyScope.cancel()
+            if (legacyTempFile.exists()) {
+                legacyTempFile.delete()
+            }
+        }
     }
 
     @Test

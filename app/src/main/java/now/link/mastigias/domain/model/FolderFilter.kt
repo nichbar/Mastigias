@@ -8,7 +8,8 @@ enum class FilterMode {
 data class FolderFilter(
     val uri: String,
     val path: String,
-    val mode: FilterMode = FilterMode.INCLUDE
+    val mode: FilterMode = FilterMode.INCLUDE,
+    val recursive: Boolean = true
 ) {
     val isInclude: Boolean get() = mode == FilterMode.INCLUDE
     val isExclude: Boolean get() = mode == FilterMode.EXCLUDE

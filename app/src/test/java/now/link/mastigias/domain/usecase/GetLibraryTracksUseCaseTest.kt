@@ -11,6 +11,7 @@ import now.link.mastigias.ui.library.LibrarySortOrder
 import now.link.mastigias.ui.library.LibraryViewMode
 import now.link.mastigias.ui.library.SortDirection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -363,5 +364,215 @@ class GetLibraryTracksUseCaseTest {
             path = ""
         )
         assertEquals("Internal Storage", rootFilter.displayName)
+    }
+
+    @Test
+    fun `isTrackUnderFilter matches direct files only when recursive is false`() {
+        val recursiveFilter = FolderFilter(
+            uri = "",
+            path = "/storage/emulated/0/Music",
+            recursive = true
+        )
+        val nonRecursiveFilter = FolderFilter(
+            uri = "",
+            path = "/storage/emulated/0/Music",
+            recursive = false
+        )
+
+        val directFile = "/storage/emulated/0/Music/loose.mp3"
+        val subfolderFile = "/storage/emulated/0/Music/Artists/Albums/track.mp3"
+        val outsideFile = "/storage/emulated/0/Downloads/other.mp3"
+
+        // Recursive: matches direct and nested
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directFile, recursiveFilter))
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(subfolderFile, recursiveFilter))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(outsideFile, recursiveFilter))
+
+        // Non-recursive: matches direct only
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directFile, nonRecursiveFilter))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(subfolderFile, nonRecursiveFilter))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(outsideFile, nonRecursiveFilter))
+    }
+
+    @Test
+    fun `isTrackUnderFilter with SAF tree URI respects recursive flag`() {
+        val safRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+            path = "Music",
+            recursive = true
+        )
+        val safNonRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+            path = "Music",
+            recursive = false
+        )
+
+        val directTrack = "/storage/emulated/0/Music/single.mp3"
+        val nestedTrack = "/storage/emulated/0/Music/Album/song.mp3"
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, safRecursive))
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, safRecursive))
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, safNonRecursive))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, safNonRecursive))
+    }
+
+    @Test
+    fun `isTrackUnderFilter with SAF tree URI on secondary volume respects recursive flag`() {
+        val sdRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/1234-5678%3AMusic",
+            path = "Music",
+            recursive = true
+        )
+        val sdNonRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/1234-5678%3AMusic",
+            path = "Music",
+            recursive = false
+        )
+
+        val directTrack = "/storage/1234-5678/Music/single.mp3"
+        val nestedTrack = "/storage/1234-5678/Music/Sub/song.mp3"
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, sdRecursive))
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, sdRecursive))
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, sdNonRecursive))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, sdNonRecursive))
+    }
+
+    @Test
+    fun `isTrackUnderFilter with raw SAF docId respects recursive flag`() {
+        val rawRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/raw%3A%2Fstorage%2Femulated%2F0%2FMusic",
+            path = "Music",
+            recursive = true
+        )
+        val rawNonRecursive = FolderFilter(
+            uri = "content://com.android.externalstorage.documents/tree/raw%3A%2Fstorage%2Femulated%2F0%2FMusic",
+            path = "Music",
+            recursive = false
+        )
+
+        val directTrack = "/storage/emulated/0/Music/single.mp3"
+        val nestedTrack = "/storage/emulated/0/Music/Rock/track.mp3"
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, rawRecursive))
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, rawRecursive))
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, rawNonRecursive))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, rawNonRecursive))
+    }
+
+    @Test
+    fun `isTrackUnderFilter with relative fallback respects recursive flag`() {
+        val relRecursive = FolderFilter(
+            uri = "custom://music",
+            path = "Music",
+            recursive = true
+        )
+        val relNonRecursive = FolderFilter(
+            uri = "custom://music",
+            path = "Music",
+            recursive = false
+        )
+
+        val directTrack = "/storage/emulated/0/Music/single.mp3"
+        val nestedTrack = "/storage/emulated/0/Music/Rock/track.mp3"
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, relRecursive))
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, relRecursive))
+
+        assertTrue(GetLibraryTracksUseCase.isTrackUnderFilter(directTrack, relNonRecursive))
+        assertFalse(GetLibraryTracksUseCase.isTrackUnderFilter(nestedTrack, relNonRecursive))
+    }
+
+    @Test
+    fun `filters tracks non-recursively includes direct files and excludes subfolder files`() = runBlocking {
+        val directTrack = Track(
+            id = 4L,
+            path = "/storage/emulated/0/Music/root_loose.mp3",
+            title = "RootLoose",
+            artist = "Artist",
+            album = "Loose",
+            trackNumber = 1,
+            durationMs = 1200L,
+            hasArtwork = false,
+            isTagged = true,
+            dateModified = 50L,
+            dateAdded = 50L
+        )
+        musicRepository.tracks[directTrack.id] = directTrack
+
+        // Non-recursive INCLUDE on /Music: should include only directTrack, not trackA (/Music/FolderA) or trackB (/Music/FolderB)
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+                    path = "Music",
+                    mode = FilterMode.INCLUDE,
+                    recursive = false
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+        assertEquals(1, tracks.size)
+        assertEquals("RootLoose", tracks[0].title)
+
+        // Switching to recursive INCLUDE on /Music: should include directTrack, trackA, and trackB
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+                    path = "Music",
+                    mode = FilterMode.INCLUDE,
+                    recursive = true
+                )
+            )
+        )
+
+        val recursiveTracks = useCase().first()
+        assertEquals(3, recursiveTracks.size)
+        assertTrue(recursiveTracks.any { it.title == "RootLoose" })
+        assertTrue(recursiveTracks.any { it.title == "Alpha" })
+        assertTrue(recursiveTracks.any { it.title == "Beta" })
+        assertTrue(recursiveTracks.none { it.title == "Gamma" })
+    }
+
+    @Test
+    fun `excludes tracks non-recursively leaves subfolder tracks untouched`() = runBlocking {
+        val directTrack = Track(
+            id = 4L,
+            path = "/storage/emulated/0/Music/root_loose.mp3",
+            title = "RootLoose",
+            artist = "Artist",
+            album = "Loose",
+            trackNumber = 1,
+            durationMs = 1200L,
+            hasArtwork = false,
+            isTagged = true,
+            dateModified = 50L,
+            dateAdded = 50L
+        )
+        musicRepository.tracks[directTrack.id] = directTrack
+
+        // Non-recursive EXCLUDE on /Music: excludes only root_loose.mp3, but keeps trackA (/Music/FolderA), trackB (/Music/FolderB), and trackC (/Downloads)
+        preferencesRepository.setFolderFilters(
+            listOf(
+                FolderFilter(
+                    uri = "content://com.android.externalstorage.documents/tree/primary%3AMusic",
+                    path = "Music",
+                    mode = FilterMode.EXCLUDE,
+                    recursive = false
+                )
+            )
+        )
+
+        val tracks = useCase().first()
+        assertEquals(3, tracks.size)
+        assertTrue(tracks.none { it.title == "RootLoose" })
+        assertTrue(tracks.any { it.title == "Alpha" })
+        assertTrue(tracks.any { it.title == "Beta" })
+        assertTrue(tracks.any { it.title == "Gamma" })
     }
 }

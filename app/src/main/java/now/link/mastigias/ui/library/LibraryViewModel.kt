@@ -278,7 +278,7 @@ class LibraryViewModel @Inject constructor(
     }
 
     val folderFilters: StateFlow<List<FolderFilter>> = preferencesRepository.folderFiltersFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope + dispatchers.main, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addFolderFilter(filter: FolderFilter) {
         viewModelScope.launch(dispatchers.io) {
@@ -299,6 +299,19 @@ class LibraryViewModel @Inject constructor(
             val updated = folderFilters.value.map {
                 if (it.uri == filter.uri) {
                     it.copy(mode = if (it.isInclude) FilterMode.EXCLUDE else FilterMode.INCLUDE)
+                } else {
+                    it
+                }
+            }
+            preferencesRepository.setFolderFilters(updated)
+        }
+    }
+
+    fun toggleFolderFilterRecursive(filter: FolderFilter) {
+        viewModelScope.launch(dispatchers.io) {
+            val updated = folderFilters.value.map {
+                if (it.uri == filter.uri) {
+                    it.copy(recursive = !it.recursive)
                 } else {
                     it
                 }

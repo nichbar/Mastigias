@@ -122,7 +122,8 @@ fun SettingsScreen(
             val newFilter = FolderFilter(
                 uri = uri.toString(),
                 path = simplifiedPath,
-                mode = FilterMode.INCLUDE
+                mode = FilterMode.INCLUDE,
+                recursive = true
             )
             viewModel.addFolderFilter(newFilter)
         }
@@ -335,6 +336,29 @@ fun SettingsScreen(
                                                 MaterialTheme.colorScheme.onPrimaryContainer
                                             } else {
                                                 MaterialTheme.colorScheme.onErrorContainer
+                                            },
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(6.dp))
+
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = if (filter.recursive) {
+                                            MaterialTheme.colorScheme.secondaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerHighest
+                                        },
+                                        modifier = Modifier.clickable { viewModel.toggleFilterRecursive(filter) }
+                                    ) {
+                                        Text(
+                                            text = if (filter.recursive) "Recursive" else "Direct only",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (filter.recursive) {
+                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
                                             },
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )

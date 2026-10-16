@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import now.link.mastigias.domain.model.FilterMode
 import now.link.mastigias.domain.model.FolderFilter
 import java.net.URLDecoder
 
@@ -45,7 +44,7 @@ fun FolderFilterDialog(
     filters: List<FolderFilter>,
     onAddFilter: (FolderFilter) -> Unit,
     onRemoveFilter: (FolderFilter) -> Unit,
-    onToggleFilterMode: (FolderFilter) -> Unit,
+    onToggleFilterRecursive: (FolderFilter) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -78,7 +77,7 @@ fun FolderFilterDialog(
             val newFilter = FolderFilter(
                 uri = uri.toString(),
                 path = simplifiedPath,
-                mode = FilterMode.INCLUDE
+                recursive = true
             )
             onAddFilter(newFilter)
         }
@@ -99,7 +98,7 @@ fun FolderFilterDialog(
                     .heightIn(max = 400.dp)
             ) {
                 Text(
-                    text = "Include or exclude specific folders from your music library.",
+                    text = "Select specific folders to include in your music library.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -147,7 +146,7 @@ fun FolderFilterDialog(
                         ) { filter ->
                             FolderFilterRow(
                                 filter = filter,
-                                onToggleMode = { onToggleFilterMode(filter) },
+                                onToggleRecursive = { onToggleFilterRecursive(filter) },
                                 onDelete = { onRemoveFilter(filter) }
                             )
                         }
@@ -167,7 +166,7 @@ fun FolderFilterDialog(
 @Composable
 private fun FolderFilterRow(
     filter: FolderFilter,
-    onToggleMode: () -> Unit,
+    onToggleRecursive: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -193,23 +192,23 @@ private fun FolderFilterRow(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Mode badge (Include / Exclude)
+            // Recursive badge (Recursive / Direct only)
             Surface(
                 shape = MaterialTheme.shapes.small,
-                color = if (filter.isInclude) {
-                    MaterialTheme.colorScheme.primaryContainer
+                color = if (filter.recursive) {
+                    MaterialTheme.colorScheme.secondaryContainer
                 } else {
-                    MaterialTheme.colorScheme.errorContainer
+                    MaterialTheme.colorScheme.surfaceContainerHighest
                 },
-                modifier = Modifier.clickable { onToggleMode() }
+                modifier = Modifier.clickable { onToggleRecursive() }
             ) {
                 Text(
-                    text = if (filter.isInclude) "Include" else "Exclude",
+                    text = if (filter.recursive) "Recursive" else "Direct only",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (filter.isInclude) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
+                    color = if (filter.recursive) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
                     } else {
-                        MaterialTheme.colorScheme.onErrorContainer
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )

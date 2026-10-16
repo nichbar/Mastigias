@@ -522,7 +522,7 @@ fun LibraryScreen(
             filters = folderFilters,
             onAddFilter = { viewModel.addFolderFilter(it) },
             onRemoveFilter = { viewModel.removeFolderFilter(it) },
-            onToggleFilterMode = { viewModel.toggleFolderFilterMode(it) },
+            onToggleFilterRecursive = { viewModel.toggleFolderFilterRecursive(it) },
             onDismiss = { showFolderDialog = false }
         )
     }

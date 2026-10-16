@@ -30,17 +30,24 @@ val Context.mastigiasPreferencesDataStore: DataStore<Preferences> by preferences
     name = "mastigias_preferences"
 )
 
+private val jsonSerializer = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+}
+
 @Serializable
 private data class FolderFilterDto(
     val uri: String,
     val path: String,
-    val mode: String
+    val mode: String,
+    val recursive: Boolean = true
 )
 
 private fun FolderFilter.toDto(): FolderFilterDto = FolderFilterDto(
     uri = uri,
     path = path,
-    mode = mode.name
+    mode = mode.name,
+    recursive = recursive
 )
 
 private fun FolderFilterDto.toDomain(): FolderFilter = FolderFilter(
@@ -50,7 +57,8 @@ private fun FolderFilterDto.toDomain(): FolderFilter = FolderFilter(
         FilterMode.valueOf(mode)
     } catch (e: Exception) {
         FilterMode.INCLUDE
-    }
+    },
+    recursive = recursive
 )
 
 @Singleton
@@ -137,7 +145,7 @@ class PreferencesRepositoryImpl @Inject constructor(
                 emptyList()
             } else {
                 try {
-                    val dtos = Json.decodeFromString<List<FolderFilterDto>>(json)
+                    val dtos = jsonSerializer.decodeFromString<List<FolderFilterDto>>(json)
                     dtos.map { it.toDomain() }
                 } catch (e: Exception) {
                     emptyList()
@@ -165,7 +173,7 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setFolderFilters(filters: List<FolderFilter>) {
         val dtos = filters.map { it.toDto() }
-        val json = Json.encodeToString(dtos)
+        val json = jsonSerializer.encodeToString(dtos)
         dataStore.edit { prefs ->
             prefs[KEY_FOLDER_FILTERS] = json
         }

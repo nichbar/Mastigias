@@ -98,16 +98,21 @@ class GetLibraryTracksUseCase @Inject constructor(
             if (filter.path.startsWith("/")) {
                 val normalizedFilter = normalizeStorageAliases(filter.path).trimEnd('/')
                 val normalizedTrack = normalizeStorageAliases(trackPath).trimEnd('/')
-                if (normalizedTrack.equals(normalizedFilter, ignoreCase = true) ||
-                    normalizedTrack.startsWith("$normalizedFilter/", ignoreCase = true)
-                ) {
+                val matches = if (filter.recursive) {
+                    normalizedTrack.equals(normalizedFilter, ignoreCase = true) ||
+                        normalizedTrack.startsWith("$normalizedFilter/", ignoreCase = true)
+                } else {
+                    val parent = normalizedTrack.substringBeforeLast('/', "")
+                    parent.equals(normalizedFilter, ignoreCase = true)
+                }
+                if (matches) {
                     return true
                 }
             }
 
             // 2. Resolve from SAF Uri if present and valid
             if (filter.uri.isNotBlank()) {
-                val safMatchResult = isPathUnderSafUri(trackPath, filter.uri)
+                val safMatchResult = isPathUnderSafUri(trackPath, filter.uri, filter.recursive)
                 if (safMatchResult != null) {
                     return safMatchResult
                 }
@@ -116,18 +121,27 @@ class GetLibraryTracksUseCase @Inject constructor(
             // 3. Fallback: match filter.path as relative path when URI is not a SAF URI
             if (filter.path.isNotBlank()) {
                 val filterRel = filter.path.trim('/')
-                if (filterRel.isEmpty()) {
-                    return true
-                }
                 val storagePrefixRegex = Regex(
                     "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary|storage/[^/]+|mnt/media_rw/[^/]+)/",
                     RegexOption.IGNORE_CASE
                 )
                 val trackRel = trackPath.replaceFirst(storagePrefixRegex, "").trim('/')
-                if (trackRel.equals(filterRel, ignoreCase = true) ||
-                    trackRel.startsWith("$filterRel/", ignoreCase = true)
-                ) {
-                    return true
+
+                if (filterRel.isEmpty()) {
+                    return if (filter.recursive) true else !trackRel.contains('/')
+                }
+
+                if (filter.recursive) {
+                    if (trackRel.equals(filterRel, ignoreCase = true) ||
+                        trackRel.startsWith("$filterRel/", ignoreCase = true)
+                    ) {
+                        return true
+                    }
+                } else {
+                    val trackParent = trackRel.substringBeforeLast('/', "")
+                    if (trackParent.equals(filterRel, ignoreCase = true)) {
+                        return true
+                    }
                 }
             }
 
@@ -146,7 +160,7 @@ class GetLibraryTracksUseCase @Inject constructor(
             else -> path
         }
 
-        private fun isPathUnderSafUri(trackPath: String, uriString: String): Boolean? {
+        private fun isPathUnderSafUri(trackPath: String, uriString: String, recursive: Boolean = true): Boolean? {
             val pathPart = uriString.substringBefore("?").substringBefore("#")
             val decoded = runCatching {
                 URLDecoder.decode(pathPart, "UTF-8")
@@ -165,12 +179,21 @@ class GetLibraryTracksUseCase @Inject constructor(
             if (docId.startsWith("raw:", ignoreCase = true)) {
                 val rawPath = normalizeStorageAliases(docId.substringAfter("raw:").trimEnd('/'))
                 val normalizedTrack = normalizeStorageAliases(trackPath).trimEnd('/')
-                return normalizedTrack.equals(rawPath, ignoreCase = true) ||
-                    normalizedTrack.startsWith("$rawPath/", ignoreCase = true)
+                return if (recursive) {
+                    normalizedTrack.equals(rawPath, ignoreCase = true) ||
+                        normalizedTrack.startsWith("$rawPath/", ignoreCase = true)
+                } else {
+                    val parent = normalizedTrack.substringBeforeLast('/', "")
+                    parent.equals(rawPath, ignoreCase = true)
+                }
             }
 
             if (docId.equals("primary", ignoreCase = true)) {
-                val regexPattern = "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)(?:/.*)?$"
+                val regexPattern = if (recursive) {
+                    "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)(?:/.*)?$"
+                } else {
+                    "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)/[^/]+$"
+                }
                 return Regex(regexPattern, RegexOption.IGNORE_CASE).matches(trackPath)
             }
 
@@ -180,16 +203,32 @@ class GetLibraryTracksUseCase @Inject constructor(
 
                 if (volumeId.equals("primary", ignoreCase = true)) {
                     val regexPattern = if (relPath.isEmpty()) {
-                        "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)(?:/.*)?$"
+                        if (recursive) {
+                            "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)(?:/.*)?$"
+                        } else {
+                            "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)/[^/]+$"
+                        }
                     } else {
-                        "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)/${Regex.escape(relPath)}(?:/.*)?$"
+                        if (recursive) {
+                            "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)/${Regex.escape(relPath)}(?:/.*)?$"
+                        } else {
+                            "^/(?:storage/emulated/\\d+|sdcard|storage/self/primary)/${Regex.escape(relPath)}/[^/]+$"
+                        }
                     }
                     return Regex(regexPattern, RegexOption.IGNORE_CASE).matches(trackPath)
                 } else if (volumeId.isNotBlank()) {
                     val regexPattern = if (relPath.isEmpty()) {
-                        "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}(?:/.*)?$"
+                        if (recursive) {
+                            "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}(?:/.*)?$"
+                        } else {
+                            "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}/[^/]+$"
+                        }
                     } else {
-                        "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}/${Regex.escape(relPath)}(?:/.*)?$"
+                        if (recursive) {
+                            "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}/${Regex.escape(relPath)}(?:/.*)?$"
+                        } else {
+                            "^/(?:storage|mnt/media_rw)/${Regex.escape(volumeId)}/${Regex.escape(relPath)}/[^/]+$"
+                        }
                     }
                     return Regex(regexPattern, RegexOption.IGNORE_CASE).matches(trackPath)
                 }
