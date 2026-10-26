@@ -4,6 +4,33 @@ project("mastigias-taglib")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Deterministic archiving for static libraries
+set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>")
+set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>")
+
+# Remap paths for reproducible builds across different build environments
+get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../.." ABSOLUTE)
+get_filename_component(PROJECT_ROOT_REAL "${PROJECT_ROOT}" REALPATH)
+
+add_compile_options(
+    "-ffile-prefix-map=${CMAKE_CURRENT_BINARY_DIR}=."
+    "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=."
+    "-ffile-prefix-map=${PROJECT_ROOT}=."
+    "-ffile-prefix-map=${PROJECT_ROOT_REAL}=."
+)
+
+if(DEFINED ANDROID_NDK)
+    get_filename_component(NDK_ROOT "${ANDROID_NDK}" ABSOLUTE)
+    get_filename_component(NDK_ROOT_REAL "${ANDROID_NDK}" REALPATH)
+    add_compile_options(
+        "-ffile-prefix-map=${NDK_ROOT}=/android-ndk"
+        "-ffile-prefix-map=${NDK_ROOT_REAL}=/android-ndk"
+    )
+endif()
+
+add_compile_options("-gno-record-gcc-switches")
+add_link_options("-Wl,--build-id=sha1")
+
 # Configure TagLib static build
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static library" FORCE)
 set(ENABLE_STATIC_RUNTIME ON CACHE BOOL "Static C++ runtime" FORCE)

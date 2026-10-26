@@ -19,12 +19,13 @@ AutoName: Mastigias
 
 RepoType: git
 Repo: https://github.com/nichbar/Mastigias.git
-Binaries: https://github.com/nichbar/Mastigias/releases/download/v%v/Mastigias.v%v-universal.apk
+Binaries:
+  https://github.com/nichbar/Mastigias/releases/download/v%v/Mastigias.v%v-universal.apk
 
 Builds:
-  - versionName: 1.2.3
-    versionCode: 6
-    commit: 048d3e89555dd3f2fee1c3f0ca6798869f94dc33
+  - versionName: 1.2.5
+    versionCode: 8
+    commit: v1.2.5
     subdir: app
     submodules: true
     gradle:
@@ -37,5 +38,5 @@ AllowedAPKSigningKeys: f38f18cd8b6eabfe5434cb0278b6c23029c04f34977e73868c07f82bb
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+$
-CurrentVersion: 1.2.3
-CurrentVersionCode: 6
+CurrentVersion: 1.2.5
+CurrentVersionCode: 8

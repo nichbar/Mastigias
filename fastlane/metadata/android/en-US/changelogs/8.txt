@@ -1,0 +1,2 @@
+- Configure deterministic native compilation for reproducible builds
+- Fix path leakage in native debug symbols
